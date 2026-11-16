@@ -141,6 +141,7 @@ footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line)
 </footer>
 <script src="config.js"></script>
 <script src="lojas-data.js"></script>
+<script src="fuse.min.js"></script>
 <script src="core.js"></script>
 <script src="camera.js"></script>
 <script>
@@ -273,12 +274,12 @@ $("qx").onclick=()=>{ $("q").value=""; st.q=""; st.sel=null; st.view=filtering()
 
 /* ---------- ações ---------- */
 function showGroup(k,doFit){ st.g=k; renderTabs(); draw(); if(doFit) fit(); const g=G[k]; $("sub").textContent=`${BUILD[g.b].name} · ${FLOORS[g.f]}`; }
-function selectStore(id,center){
+function selectStore(id,center,notrack){
   const s=STORES[id]; if(st.view!=="store") st.back=st.view;
   st.sel=id; st.view="store";
   if (st.g!==s.g) showGroup(s.g,false);
   if (st.sheet==="peek"||st.sheet==="full") setSheet("mid"); else markBar();
-  draw(); renderSheet(); if(center!==false) centerOn(s.door.x,s.door.y,340); MM.track("loja",{loja:s.s});
+  draw(); renderSheet(); if(center!==false) centerOn(s.door.x,s.door.y,340); if(!notrack) MM.track("loja",{loja:s.s});
 }
 function backFromStore(){ st.sel=null; st.view=st.back==="store"?"home":st.back; if(st.view==="home"&&filtering()) st.view="results"; refresh(); }
 function toggleList(id){
@@ -309,13 +310,21 @@ function openCam(s, fromList){
 }
 
 /* ---------- telas do painel ---------- */
+const leaseLink = s => { const n=(window.MM_CONFIG&&MM_CONFIG.whatsLocacao)||""; return n ? "https://wa.me/"+String(n).replace(/\D/g,"")+"?text="+encodeURIComponent(`Olá! Tenho interesse no box disponível: ${s.loc} (${BUILD[s.b].name}).`) : ""; };
+const storeURL = s => location.origin+location.pathname+"?loja="+encodeURIComponent(s.s);
+async function shareStore(s){
+  const url=storeURL(s), data={title:s.n+" · Mega Moda",text:`${s.n} — ${locTxt(s).replace(/<[^>]+>/g,"")}`,url};
+  try{ if(navigator.share){ await navigator.share(data); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(url); toast("🔗 Link copiado! Cole no WhatsApp ou Instagram.",2500); }
+  catch(e){ prompt("Copie o link da loja:",url); }
+}
 const gmaps = a => "https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(a);
 const wa = n => { let d=String(n).replace(/\D/g,""); if(d.length<=11) d="55"+d; return "https://wa.me/"+d; };
 const ig = v => /^https?:/.test(v) ? v : "https://www.instagram.com/"+String(v).replace(/^@/,"")+"/";
 function itemHTML(s,d){
   const inl=st.list.includes(s.s);
   return `<div class="item" data-id="${s.id}"><span class="ico" style="background:${tint(s)}">${s.icon}</span>
-    <div class="mid"><div class="n">${s.dest?'<span class="star">★</span> ':""}${esc(s.n)}</div><div class="l">${locTxt(s)}${s.promo?" · 🏷️ promoção":""}</div></div>
+    <div class="mid"><div class="n">${s.dest?'<span class="star">★</span> ':""}${esc(s.n)}</div><div class="l">${locTxt(s)}${s.vaga?" · 🔑 para alugar":""}${s.promo?" · 🏷️ promoção":""}</div></div>
     <div class="rt"><span class="dist">${mTxt(d)}</span><button class="add ${inl?"in":""}" data-add="${s.id}" aria-label="${inl?"Remover da lista":"Adicionar à lista"}">${inl?"✓":"＋"}</button></div></div>`;
 }
 function foot(){
@@ -337,7 +346,7 @@ function viewResults(){
   const here=all.filter(s=>s.g===st.g).length;
   $("st").textContent=`${all.length} loja${all.length!==1?"s":""} encontrada${all.length!==1?"s":""}`; $("sm").textContent=`${here} neste andar`;
   if(!all.length){ $("sb").innerHTML=`<div class="empty">Nada encontrado. Tente outro nome, um produto (biquíni, jeans, tênis…) ou o número da loja.<br><br><button class="btn sm" id="clr">Limpar busca</button></div>`+foot(); $("clr").onclick=()=>{ $("q").value=""; st.q=""; st.seg=null; st.view="home"; refresh(true); }; return; }
-  $("sb").innerHTML=`<div class="note" style="margin:0 0 4px">Ordenadas da mais perto à mais longe, a partir da ${refLabel()}.</div>`
+  $("sb").innerHTML=(match.fuzzy?`<div class="promo" style="margin:0 0 6px">🔎 Não achamos exatamente “${esc(st.q.trim())}”. Mostrando resultados parecidos.</div>`:"")+`<div class="note" style="margin:0 0 4px">Ordenadas da mais perto à mais longe, a partir da ${refLabel()}.</div>`
     + all.slice(0,st.more).map(s=>itemHTML(s,D.get(s.id))).join("")
     + (all.length>st.more?`<button class="btn" id="more" style="width:100%;margin-top:10px">Ver mais ${Math.min(60,all.length-st.more)} lojas</button>`:"") + foot();
   const m=$("more"); if(m) m.onclick=()=>{ st.more+=60; const sc=$("sb").scrollTop; renderSheet(); $("sb").scrollTop=sc; };
@@ -351,9 +360,11 @@ function viewStore(){
     <div class="btns"><button class="btn b" id="camb">📷 Ver o caminho na câmera</button><button class="btn g ${inl?"in":""}" id="addb">${inl?"✓ Na minha lista":"＋ Adicionar à minha lista"}</button></div>
     <div class="stepsbox"><b>Passo a passo</b><ol class="steps">${lg.steps.map(t=>`<li>${t}</li>`).join("")}</ol></div>
     ${lg.warn?`<div class="warn">⚠️ ${lg.warn}</div>`:""}
+    ${s.vaga?`<div class="promo" style="background:#fff1c2">🔑 <b>Box disponível para locação.</b>${s.locacao?" "+esc(s.locacao):""}${leaseLink(s)?`<br><a class="btn sm w" style="margin-top:8px" id="lease" href="${leaseLink(s)}" target="_blank" rel="noopener">Tenho interesse ↗</a>`:""}</div>`:""}
     ${s.promo?`<div class="promo">🏷️ ${esc(s.promo)}</div>`:""}${s.desc?`<div class="desc">${esc(s.desc)}</div>`:""}
     <div class="tags">${s.cats.map(c=>`<span class="tag" style="border-left:3px solid ${SEGCOLOR[c]||"#999"}">${MM.iconOf(c)} ${esc(c)}</span>`).join("")}</div>
     <div class="btns">
+      <button class="btn sm" id="share">🔗 Compartilhar</button>
       <button class="btn sm" id="here">📍 Estou nesta loja</button>
       ${s.whats?`<a class="btn sm w" id="wa" href="${wa(s.whats)}" target="_blank" rel="noopener">WhatsApp ↗</a>`:""}
       ${s.insta?`<a class="btn sm" href="${esc(ig(s.insta))}" target="_blank" rel="noopener">Instagram ↗</a>`:""}
@@ -364,6 +375,8 @@ function viewStore(){
   $("camb").onclick=()=>openCam(s,false);
   $("addb").onclick=()=>toggleList(s.id);
   $("here").onclick=()=>meAtStore(s.id);
+  $("share").onclick=()=>shareStore(s);
+  const ls=$("lease"); if(ls) ls.onclick=()=>MM.track("locacao",{loja:s.s});
   const w=$("wa"); if(w) w.onclick=()=>MM.track("whats",{loja:s.s});
   $("back").onclick=backFromStore;
 }
@@ -462,6 +475,7 @@ if ("serviceWorker" in navigator && location.protocol==="https:" && window.top==
 
 /* ---------- início ---------- */
 function boot(data){
+  const keep = st.sel!=null && STORES[st.sel] ? STORES[st.sel].s : null;
   INFO={src:data.src,date:data.date};
   if (data.layouts && data.layouts.predios) for(const k in data.layouts.predios) if(BUILD[k] && !BUILD[k].cal) Object.assign(BUILD[k],data.layouts.predios[k]);
   const b=MM.build(data.stores,data.layouts); STORES=b.stores; G=b.G;
@@ -470,7 +484,17 @@ function boot(data){
   st.sel=null; st.view="home"; st.g = st.me ? st.me.g : (G["shopping|T"]?"shopping|T":MM.groupOrder(G)[0]);
   match=MM.matcher(STORES,st.q,st.seg);
   $("v3").classList.toggle("on",st.v3); $("v3").textContent=st.v3?"2D":"3D"; $("mapwrap").classList.toggle("v3",st.v3);
-  showGroup(st.g,false); refresh(); requestAnimationFrame(()=>{ fit(); applyHash(); });
+  showGroup(st.g,false); refresh(); requestAnimationFrame(()=>{ fit(); applyHash(); applyLink(keep); });
+}
+/* link direto: ?loja=slug  (também aceita o nome, sem acento) */
+let linkDone=false;
+function applyLink(keep){
+  let slug=keep;
+  if(!slug && !linkDone){ linkDone=true; try{ slug=new URLSearchParams(location.search).get("loja"); }catch(e){} if(slug) MM.track("link",{loja:String(slug).slice(0,100)}); }
+  if(!slug) return;
+  const q=MM.slugify(slug), s=STORES.find(x=>x.s===slug)||STORES.find(x=>MM.slugify(x.s)===q)||STORES.find(x=>MM.slugify(x.n)===q);
+  if(!s){ if(!keep) toast("Não encontramos essa loja. Use a busca.",3500); return; }
+  st.back="home"; selectStore(s.id,true,!!keep); setSheet("mid");
 }
 window.addEventListener("resize",fit);
 boot({stores:MM.embedded(),layouts:{},src:"embutido",date:window.MM_DATE||""});

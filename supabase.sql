@@ -23,6 +23,14 @@ create table if not exists public.lojas (
   owner         uuid references auth.users (id) on delete set null,
   atualizado_em timestamptz not null default now()
 );
+-- box vago = linha em lojas com status 'vaga' (a posição no mapa vem do campo localizacao + planta, igual às demais)
+alter table public.lojas add column if not exists status text not null default 'ocupada';
+alter table public.lojas drop constraint if exists lojas_status_check;
+alter table public.lojas add constraint lojas_status_check check (status in ('ocupada', 'vaga'));
+alter table public.lojas add column if not exists locacao_info text not null default '';
+alter table public.lojas drop constraint if exists lojas_locacao_info_check;
+alter table public.lojas add constraint lojas_locacao_info_check check (char_length(locacao_info) <= 300);
+create index if not exists lojas_status_idx on public.lojas (status);
 
 create table if not exists public.layout (
   chave         text primary key,           -- 'shopping|T', 'park|P1'... ou 'predios'
@@ -32,7 +40,7 @@ create table if not exists public.layout (
 
 create table if not exists public.eventos (
   id        bigint generated always as identity primary key,
-  tipo      text not null check (tipo in ('abrir', 'busca', 'loja', 'qr', 'whats', 'cam')),
+  tipo      text not null check (tipo in ('abrir', 'busca', 'loja', 'qr', 'whats', 'cam', 'link', 'locacao')),
   sessao    text check (char_length(sessao) <= 40),
   loja      text check (char_length(loja) <= 120),
   termo     text check (char_length(termo) <= 80),
@@ -42,7 +50,7 @@ create table if not exists public.eventos (
 );
 -- bancos criados antes do modo câmera: atualiza a lista de tipos aceitos
 alter table public.eventos drop constraint if exists eventos_tipo_check;
-alter table public.eventos add constraint eventos_tipo_check check (tipo in ('abrir', 'busca', 'loja', 'qr', 'whats', 'cam'));
+alter table public.eventos add constraint eventos_tipo_check check (tipo in ('abrir', 'busca', 'loja', 'qr', 'whats', 'cam', 'link', 'locacao'));
 create index if not exists eventos_criado_idx on public.eventos (criado_em desc);
 create index if not exists lojas_owner_idx on public.lojas (owner);
 
@@ -59,6 +67,7 @@ begin
   if auth.uid() is not null and not public.is_admin() then
     new.slug := old.slug; new.nome := old.nome; new.categorias := old.categorias;
     new.localizacao := old.localizacao; new.destaque := old.destaque; new.owner := old.owner;
+    new.status := old.status; new.locacao_info := old.locacao_info;
   end if;
   new.atualizado_em := now();
   return new;
@@ -103,12 +112,20 @@ begin
                       from (select termo, count(*) c from eventos where criado_em >= d and tipo = 'busca' and n = 0 and termo is not null group by 1 order by c desc limit 20) t),
     'qr', (select coalesce(jsonb_agg(jsonb_build_object('k', ponto, 'n', c) order by c desc), '[]'::jsonb)
            from (select ponto, count(*) c from eventos where criado_em >= d and tipo = 'qr' and ponto is not null group by 1 order by c desc limit 20) t),
+    'locacao', (select coalesce(jsonb_agg(jsonb_build_object('k', nome, 'n', c) order by c desc), '[]'::jsonb)
+                from (select coalesce(l.nome || ' · ' || l.localizacao, e.loja) nome, count(*) c from eventos e left join lojas l on l.slug = e.loja
+                      where e.criado_em >= d and e.tipo = 'locacao' and e.loja is not null group by 1 order by c desc limit 20) t),
     'whats', (select coalesce(jsonb_agg(jsonb_build_object('k', nome, 'n', c) order by c desc), '[]'::jsonb)
               from (select coalesce(l.nome, e.loja) nome, count(*) c from eventos e left join lojas l on l.slug = e.loja
                     where e.criado_em >= d and e.tipo = 'whats' and e.loja is not null group by 1 order by c desc limit 20) t)
   ) into r;
   return r;
 end $$;
+
+-- visão de métricas de busca (termo, volume, buscas sem resultado). security_invoker: respeita o RLS de eventos (só admin enxerga)
+create or replace view public.metricas_busca with (security_invoker = true) as
+  select termo, count(*) as buscas, count(*) filter (where n = 0) as sem_resultado, max(criado_em) as ultima
+  from public.eventos where tipo = 'busca' and termo is not null group by termo;
 
 -- ============ segurança (RLS) ============
 alter table public.perfis  enable row level security;
@@ -143,7 +160,7 @@ create policy eventos_ler on public.eventos for select to authenticated using (p
 grant usage on schema public to anon, authenticated;
 grant select on public.lojas, public.layout to anon, authenticated;
 grant insert on public.eventos to anon, authenticated;
-grant select on public.eventos, public.perfis to authenticated;
+grant select on public.eventos, public.perfis, public.metricas_busca to authenticated;
 grant insert, update, delete on public.lojas, public.layout to authenticated;
 revoke all on function public.vincular_lojista(text, text), public.estatisticas(int) from public, anon;
 grant execute on function public.vincular_lojista(text, text), public.estatisticas(int), public.is_admin() to authenticated;

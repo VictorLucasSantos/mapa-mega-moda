@@ -69,8 +69,15 @@ textarea{min-height:76px;resize:vertical}
 
   <!-- lojas (admin) -->
   <section class="hide" id="v-lojas">
-    <div class="box"><h2>Lojas</h2><input type="search" id="lq" placeholder="Buscar loja por nome, via ou número"><div id="llist"></div></div>
+    <div class="box"><h2>Lojas e boxes</h2><input type="search" id="lq" placeholder="Buscar loja por nome, via ou número">
+      <div class="row" style="margin:8px 0 0"><label style="margin:0"><input type="checkbox" id="lvagas"> Somente boxes vagos</label><button class="btn" id="lnew" style="margin-left:auto">＋ Novo box vago</button></div>
+      <div id="nform" class="hide" style="margin-top:8px"><label>Endereço do box (mesmo formato das lojas: Via – Piso (Loja))</label><input type="text" id="nloc" placeholder="Rua 03 – Térreo (Loja 125)"><label>Informações para o interessado (opcional)</label><input type="text" id="ninfo" maxlength="300" placeholder="Ex.: 12 m², esquina, 2 vagas de estoque"><div class="row"><button class="btn p" id="nsave">Criar box vago</button></div><div class="msg" id="nmsg"></div></div>
+      <div id="llist"></div></div>
     <div id="lform"></div>
+    <div class="box"><h2>Importar planilha (CSV)</h2>
+      <p class="mut" style="margin-top:0">Exporte do Excel/Google Sheets como CSV (separador vírgula ou ponto e vírgula). Colunas aceitas: <b>nome, localizacao, categorias, produtos, descricao, whatsapp, instagram, promo, destaque, status</b> (status: <i>vaga</i> ou <i>ocupada</i>) e, opcionalmente, <b>slug</b>. Lojas já existentes (mesmo slug) são atualizadas e células vazias não apagam dados.</p>
+      <div class="row"><input type="file" id="csvf" accept=".csv,text/csv" style="flex:1"><a class="btn" id="csvmodel" download="modelo-lojas.csv">Baixar modelo</a></div>
+      <div id="csvprev" class="mut" style="margin-top:8px"></div><div class="row"><button class="btn p hide" id="csvgo">Importar</button></div><div class="msg" id="csvmsg"></div></div>
   </section>
 
   <!-- estatísticas -->
@@ -181,6 +188,8 @@ function formHTML(r, admin) {
     ${f("whatsapp", "WhatsApp com DDD (só números)", r.whatsapp, 'maxlength="20" inputmode="tel"')}
     ${f("instagram", "Instagram (@usuario ou link)", r.instagram, 'maxlength="120"')}
     ${admin ? `<label><input type="checkbox" data-f="destaque" ${r.destaque ? "checked" : ""}> Loja em destaque (★ no mapa e no topo das listas)</label>
+      <label><input type="checkbox" data-f="vaga" ${r.status === "vaga" ? "checked" : ""}> 🔑 Box disponível para locação (aparece dourado no mapa e na busca “alugar”)</label>
+      ${f("locacao_info", "Informações da locação (aparece no card do box)", r.locacao_info, 'maxlength="300"')}
       <label>Vincular a um lojista (e-mail da conta) ${r.owner ? "— já vinculada" : ""}</label><div class="row" style="margin:0"><input type="email" data-f="email" style="flex:1" placeholder="lojista@email.com"><button class="btn" data-act="link">Vincular</button>${r.owner ? '<button class="btn d" data-act="unlink">Desvincular</button>' : ""}</div>` : ""}
     <div class="row"><button class="btn p" data-act="save">Salvar</button></div><div class="msg"></div></div>`;
 }
@@ -189,7 +198,7 @@ async function formAct(e, admin, after) {
   const box = b.closest(".box"), slug = box.dataset.slug, m = box.querySelector(".msg"), v = k => { const el = box.querySelector(`[data-f="${k}"]`); return el ? el.value.trim() : undefined; };
   if (b.dataset.act === "save") {
     const up = { descricao: v("descricao"), produtos: v("produtos"), promo: v("promo"), whatsapp: v("whatsapp").replace(/[^\d+ ()-]/g, ""), instagram: v("instagram") };
-    if (admin) Object.assign(up, { nome: v("nome"), localizacao: v("localizacao"), categorias: v("categorias").split(",").map(x => x.trim()).filter(Boolean), destaque: box.querySelector('[data-f="destaque"]').checked });
+    if (admin) Object.assign(up, { nome: v("nome"), localizacao: v("localizacao"), categorias: v("categorias").split(",").map(x => x.trim()).filter(Boolean), destaque: box.querySelector('[data-f="destaque"]').checked, status: box.querySelector('[data-f="vaga"]').checked ? "vaga" : "ocupada", locacao_info: v("locacao_info") });
     const { data, error } = await sb.from("lojas").update(up).eq("slug", slug).select();
     if (error || !data || !data.length) return msg(m, "Não foi possível salvar" + (error ? ": " + error.message : " (sem permissão para esta loja)."));
     msg(m, "Salvo. As mudanças já aparecem no mapa.", true); if (after) after(data[0]);
@@ -219,13 +228,94 @@ async function loadLojas() {
 }
 function listLojas() {
   const q = MM.norm($("lq").value).trim();
-  const r = ALL.filter(x => !q || MM.norm(x.nome + " " + x.localizacao).includes(q)).slice(0, 30);
-  $("llist").innerHTML = r.map(x => `<div class="item" data-s="${esc(x.slug)}"><div><div class="n">${x.destaque ? "★ " : ""}${esc(x.nome)}</div><div class="l">${esc(x.localizacao)}${x.owner ? " · lojista vinculado" : ""}</div></div><span class="go">Editar →</span></div>`).join("")
-    + `<div class="mut" style="margin-top:8px">${ALL.length} lojas no banco${q ? "" : " — mostrando as 30 primeiras; use a busca"}.</div>`;
+  const so = $("lvagas").checked, r = ALL.filter(x => (!so || x.status === "vaga") && (!q || MM.norm(x.nome + " " + x.localizacao).includes(q))).slice(0, 30);
+  $("llist").innerHTML = r.map(x => `<div class="item" data-s="${esc(x.slug)}"><div><div class="n">${x.status === "vaga" ? "🔑 " : ""}${x.destaque ? "★ " : ""}${esc(x.nome)}</div><div class="l">${esc(x.localizacao)}${x.owner ? " · lojista vinculado" : ""}</div></div><button class="btn" data-q="${esc(x.slug)}" style="margin-left:auto">${x.status === "vaga" ? "Marcar ocupado" : "Marcar vago"}</button><span class="go">Editar →</span></div>`).join("")
+    + `<div class="mut" style="margin-top:8px">${ALL.length} lojas no banco (${ALL.filter(x => x.status === "vaga").length} vagas)${q || so ? "" : " — mostrando as 30 primeiras; use a busca"}.</div>`;
 }
-$("lq").oninput = listLojas;
-$("llist").onclick = e => { const it = e.target.closest(".item"); if (!it) return; const r = ALL.find(x => x.slug === it.dataset.s); $("lform").innerHTML = formHTML(r, true); $("lform").scrollIntoView({ behavior: "smooth" }); };
+$("lq").oninput = listLojas; $("lvagas").onchange = listLojas;
+$("llist").onclick = async e => {
+  const qb = e.target.closest("[data-q]");
+  if (qb) { e.stopPropagation(); const r = ALL.find(x => x.slug === qb.dataset.q), st = r.status === "vaga" ? "ocupada" : "vaga";
+    const { data, error } = await sb.from("lojas").update({ status: st }).eq("slug", r.slug).select();
+    if (error || !data || !data.length) return alert("Não foi possível alterar: " + (error ? error.message : "sem permissão")); Object.assign(r, data[0]); return listLojas(); }
+  const it = e.target.closest(".item"); if (!it) return; const r = ALL.find(x => x.slug === it.dataset.s); $("lform").innerHTML = formHTML(r, true); $("lform").scrollIntoView({ behavior: "smooth" }); };
 $("lform").onclick = e => formAct(e, true, async row => { if (row) { const i = ALL.findIndex(x => x.slug === row.slug); if (i >= 0) ALL[i] = row; } else await loadLojas(); listLojas(); });
+
+/* ---------- novo box vago ---------- */
+$("lnew").onclick = () => $("nform").classList.toggle("hide");
+$("nsave").onclick = async () => {
+  const loc = $("nloc").value.trim(), m = $("nmsg"); if (!loc) return msg(m, "Informe o endereço do box.");
+  const row = { slug: MM.slugify("vaga " + loc), nome: "Box disponível", localizacao: loc, categorias: [], status: "vaga", locacao_info: $("ninfo").value.trim().slice(0, 300) };
+  const { error } = await sb.from("lojas").insert(row);
+  if (error) return msg(m, error.code === "23505" ? "Já existe um box com esse endereço." : "Não foi possível criar: " + error.message);
+  msg(m, "Box vago criado. Ele já aparece no mapa.", true); $("nloc").value = ""; $("ninfo").value = ""; await loadLojas();
+};
+
+/* ---------- importação CSV ---------- */
+const CSV_COLS = { slug: "slug", nome: "nome", loja: "nome", localizacao: "localizacao", endereco: "localizacao", local: "localizacao", box: "localizacao",
+  categorias: "categorias", segmentos: "categorias", segmento: "categorias", produtos: "produtos", tags: "produtos", palavraschave: "produtos",
+  descricao: "descricao", whatsapp: "whatsapp", telefone: "whatsapp", instagram: "instagram", promo: "promo", promocao: "promo",
+  destaque: "destaque", status: "status", situacao: "status" };
+function parseCSV(txt) {
+  txt = txt.replace(/^﻿/, ""); const first = txt.split(/\r?\n/)[0], d = first.split(";").length > first.split(",").length ? ";" : ",";
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < txt.length; i++) {
+    const c = txt[i];
+    if (q) { if (c === '"') { if (txt[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === d) { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && txt[i + 1] === "\n") i++; row.push(f); f = ""; rows.push(row); row = []; }
+    else f += c;
+  }
+  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+const yes = v => /^(1|s|sim|true|x|vaga|vago|disponivel|livre|alugar|locacao)$/.test(MM.norm(v || "").trim());
+function csvToRows(txt) {
+  const rows = parseCSV(txt); if (rows.length < 2) throw new Error("A planilha precisa ter o cabeçalho e ao menos uma linha.");
+  const head = rows[0].map(h => CSV_COLS[MM.norm(h).replace(/[^a-z]/g, "")] || null);
+  if (!head.includes("localizacao")) throw new Error("Falta a coluna “localizacao” (endereço oficial: Via – Piso (Loja)).");
+  const byslug = new Map(ALL.map(x => [x.slug, x])), seen = new Set(), out = [], errs = [];
+  rows.slice(1).forEach((cells, i) => {
+    const o = {}; head.forEach((k, j) => { if (k && (cells[j] || "").trim()) o[k] = cells[j].trim(); });
+    const vaga = "status" in o ? yes(o.status) : null, n = i + 2;
+    if (!o.localizacao) return errs.push(`linha ${n}: sem localizacao`);
+    if (!o.nome && vaga !== true) return errs.push(`linha ${n}: sem nome`);
+    let slug = MM.slugify(o.slug || (vaga === true && !o.nome ? "vaga " + o.localizacao : o.nome)), base = slug, k = 2;
+    if (!slug) return errs.push(`linha ${n}: nome inválido`);
+    while (seen.has(slug)) slug = base + "-" + k++; seen.add(slug);
+    const old = byslug.get(slug), r = Object.assign({ slug, nome: "Box disponível", localizacao: "", categorias: [], descricao: "", produtos: "", whatsapp: "", instagram: "", promo: "", destaque: false, status: "ocupada", locacao_info: "" },
+      old ? { nome: old.nome, localizacao: old.localizacao, categorias: old.categorias, descricao: old.descricao, produtos: old.produtos, whatsapp: old.whatsapp, instagram: old.instagram, promo: old.promo, destaque: old.destaque, status: old.status, locacao_info: old.locacao_info } : {});
+    if (o.nome) r.nome = o.nome; r.localizacao = o.localizacao;
+    if (o.categorias) r.categorias = o.categorias.split(/[,|;/]/).map(x => x.trim()).filter(Boolean);
+    if (o.descricao) r.descricao = o.descricao.slice(0, 600); if (o.produtos) r.produtos = o.produtos.slice(0, 400);
+    if (o.whatsapp) r.whatsapp = o.whatsapp.replace(/[^\d+ ()-]/g, "").slice(0, 20); if (o.instagram) r.instagram = o.instagram.slice(0, 120); if (o.promo) r.promo = o.promo.slice(0, 140);
+    if ("destaque" in o) r.destaque = yes(o.destaque); if (vaga !== null) r.status = vaga ? "vaga" : "ocupada";
+    out.push({ r, novo: !old });
+  });
+  return { out, errs };
+}
+let CSVROWS = null;
+$("csvmodel").href = "data:text/csv;charset=utf-8," + encodeURIComponent("﻿nome;localizacao;categorias;produtos;descricao;whatsapp;instagram;promo;destaque;status\nExemplo Moda;Rua 03 – Térreo (Loja 125);Feminino,Jeans;vestido midi, calça wide leg;Moda feminina no atacado;62999999999;@exemplomoda;;nao;ocupada\n;Rua 03 – Térreo (Loja 127);;;;;;;;vaga\n");
+$("csvf").onchange = async e => {
+  const f = e.target.files[0]; CSVROWS = null; $("csvgo").classList.add("hide"); $("csvmsg").textContent = ""; if (!f) return;
+  try {
+    if (!ALL.length) await loadLojas();
+    const { out, errs } = csvToRows(await f.text()); CSVROWS = out.map(x => x.r);
+    const nv = out.filter(x => x.novo).length, vg = out.filter(x => x.r.status === "vaga").length;
+    $("csvprev").innerHTML = `<b>${out.length}</b> linhas válidas: ${nv} novas, ${out.length - nv} atualizações, ${vg} boxes vagos.` + (errs.length ? `<br><span style="color:var(--acc)">${errs.length} ignoradas:</span> ${esc(errs.slice(0, 8).join("; "))}${errs.length > 8 ? "…" : ""}` : "");
+    if (out.length) $("csvgo").classList.remove("hide");
+  } catch (er) { $("csvprev").innerHTML = `<span class="msg er">${esc(er.message)}</span>`; }
+};
+$("csvgo").onclick = async () => {
+  if (!CSVROWS) return; const m = $("csvmsg"); $("csvgo").classList.add("hide"); let n = 0;
+  for (let i = 0; i < CSVROWS.length; i += 200) {
+    const { error } = await sb.from("lojas").upsert(CSVROWS.slice(i, i + 200), { onConflict: "slug" });
+    if (error) return msg(m, `Parou após ${n} linhas: ${error.message}`);
+    n += Math.min(200, CSVROWS.length - i); msg(m, `Importando… ${n}/${CSVROWS.length}`, true);
+  }
+  msg(m, `Pronto: ${n} lojas importadas. O mapa já mostra as mudanças.`, true); CSVROWS = null; $("csvf").value = ""; $("csvprev").textContent = ""; await loadLojas();
+};
 
 /* ---------- estatísticas ---------- */
 $("dias").onchange = loadStats;
@@ -238,10 +328,11 @@ async function loadStats() {
   el.innerHTML = `<div class="kpis">
       <div class="kpi"><b>${d.visitantes}</b><span>visitantes</span></div><div class="kpi"><b>${t.abrir || 0}</b><span>aberturas do app</span></div>
       <div class="kpi"><b>${t.busca || 0}</b><span>buscas</span></div><div class="kpi"><b>${t.loja || 0}</b><span>lojas abertas</span></div>
-      <div class="kpi"><b>${t.qr || 0}</b><span>QR Codes lidos</span></div><div class="kpi"><b>${t.whats || 0}</b><span>cliques no WhatsApp</span></div><div class="kpi"><b>${t.cam || 0}</b><span>rotas na câmera</span></div></div>
+      <div class="kpi"><b>${t.qr || 0}</b><span>QR Codes lidos</span></div><div class="kpi"><b>${t.whats || 0}</b><span>cliques no WhatsApp</span></div><div class="kpi"><b>${t.cam || 0}</b><span>rotas na câmera</span></div>
+      <div class="kpi"><b>${t.link || 0}</b><span>aberturas por link direto</span></div><div class="kpi"><b>${t.locacao || 0}</b><span>interesses em boxes vagos</span></div></div>
     <h3>Visitantes por dia</h3><div class="bars">${d.por_dia.map(x => `<div title="${x.dia}: ${x.n}" style="height:${Math.round(x.n / max * 100)}%"></div>`).join("") || '<span class="mut">Sem dados ainda.</span>'}</div>
     <div class="cols">${rank("Lojas mais procuradas", d.top_lojas, "Sem dados.")}${rank("O que mais buscam", d.top_buscas, "Sem dados.")}
-      ${rank("Buscas sem resultado (demanda não atendida)", d.sem_resultado, "Nenhuma.")}${rank("Cliques no WhatsApp por loja", d.whats, "Sem dados.")}${rank("QR Codes mais lidos", d.qr, "Sem dados.")}</div>`;
+      ${rank("Buscas sem resultado (demanda não atendida)", d.sem_resultado, "Nenhuma.")}${rank("Interesse em boxes vagos (leads)", d.locacao || [], "Sem dados.")}${rank("Cliques no WhatsApp por loja", d.whats, "Sem dados.")}${rank("QR Codes mais lidos", d.qr, "Sem dados.")}</div>`;
 }
 
 /* ---------- editor de planta ---------- */

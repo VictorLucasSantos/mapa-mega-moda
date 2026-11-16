@@ -4,5 +4,7 @@
    Com os dois campos vazios o app funciona em modo estático (só os dados embutidos). */
 window.MM_CONFIG = {
   url: "https://aoplvgycstfcmkzztgyx.supabase.co",
-  key: "sb_publishable_PPfq2nLQSV0oOaAfJgcr4g_twgDRNuu"
+  key: "sb_publishable_PPfq2nLQSV0oOaAfJgcr4g_twgDRNuu",
+  /* WhatsApp (DDD + número, só dígitos) que recebe os interessados em locar boxes vagos. Ex.: "5562999999999" */
+  whatsLocacao: ""
 };

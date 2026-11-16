@@ -32,7 +32,7 @@ MM.ICON = {
 MM.iconOf = c => MM.ICON[c] || "🛍️";
 const SHOP_T_ORDER = ["Via Mega", "Via Central", "Via Fashion", "Via da Moda", "Via Tendência", "Via Look", "Via Paetê", "Via Tulipa", "Via Acácia", "Via Gérbera", "Alameda dos Eventos", "Alameda Elegante", "Alameda do Sabor", "Alameda Lírio", "Externa 69", "Externa Contorno", "Outros"];
 MM.SYN = [
-  [/biquin|maio|saida de praia|praia|sunga|beach/, "Moda Praia"],
+  [/biquin|bikini|maio|saida de praia|praia|sunga|beach/, "Moda Praia"],
   [/legging|fitness|academia|esport|activewear|treino/, "Moda Fitness"],
   [/lingerie|calcinha|sutia|pijama|intima|cueca|modelador|cinta/, "Moda Íntima"],
   [/crianc|kids|infantil|bebe|baby|menin/, "Infantil"],
@@ -78,7 +78,7 @@ MM.track = function (tipo, d) {
 };
 
 /* ---------- carga de dados ---------- */
-MM.rowToStore = r => ({ n: r.nome, s: r.slug, c: r.categorias || [], l: r.localizacao || "", desc: r.descricao || "", prod: r.produtos || "", whats: r.whatsapp || "", insta: r.instagram || "", promo: r.promo || "", dest: !!r.destaque });
+MM.rowToStore = r => ({ n: r.nome, s: r.slug, c: r.categorias || [], l: r.localizacao || "", desc: r.descricao || "", prod: r.produtos || "", whats: r.whatsapp || "", insta: r.instagram || "", promo: r.promo || "", dest: !!r.destaque, vaga: r.status === "vaga", locacao: r.locacao_info || "" });
 MM.embedded = () => (W.MM_RAW || []).map(l => { const p = l.split("|"); return { n: p[0], s: p[1], c: p[2] ? p[2].split(",") : [], l: p[3] || "" }; });
 MM.load = async function () {
   let stores = MM.embedded(), layouts = {}, src = "embutido", date = W.MM_DATE || "";
@@ -86,8 +86,9 @@ MM.load = async function () {
   if (HTTP) {
     if (MM.online()) {
       try {
+        const cols = "slug,nome,categorias,localizacao,descricao,produtos,whatsapp,instagram,promo,destaque";
         const [a, b] = await Promise.all([
-          MM.rest("lojas?select=slug,nome,categorias,localizacao,descricao,produtos,whatsapp,instagram,promo,destaque"),
+          MM.rest("lojas?select=" + cols + ",status,locacao_info").catch(() => MM.rest("lojas?select=" + cols)), /* banco ainda sem a migração de vagas */
           MM.rest("layout?select=chave,dados")
         ]);
         if (a && a.length) { stores = a.map(MM.rowToStore); src = "online"; }
@@ -122,22 +123,58 @@ MM.mk = function (o, i) {
   const om = num.match(/\d+/); const ord = om ? +om[0] : 99999;
   const b = /^Rua /.test(cor) ? "park" : /Pirulito|Caramelo/.test(cor) ? "mini" : "shopping";
   const prim = cats.find(x => x !== "Feminino") || cats[0] || "Outlets";
-  return { id: i, n: o.n, s: o.s, cats, loc: l, f, cor, num, ord, b, g: b + "|" + f, prim, icon: MM.iconOf(prim),
+  return { id: i, n: o.n, s: o.s, cats, loc: l, f, cor, num, ord, b, g: b + "|" + f, prim, icon: o.vaga ? "🔑" : MM.iconOf(prim),
     desc: o.desc || "", prod: o.prod || "", whats: o.whats || "", insta: o.insta || "", promo: o.promo || "", dest: !!o.dest,
-    key: norm([o.n, cats.join(" "), cor, num, o.prod, o.desc, o.promo].join(" ")) };
+    vaga: !!o.vaga, locacao: o.locacao || "",
+    key: norm([o.n, cats.join(" "), cor, num, o.prod, o.desc, o.promo, o.vaga ? "vaga vago box disponivel alugar aluguel locacao" : ""].join(" ")) };
 };
+/* ---------- busca tolerante a erros de digitação (Fuse.js) ---------- */
+const VOC = (() => { /* palavras-chave dos sinônimos → segmento (corrige "biquine", "legin", "sandalía"…) */
+  const m = new Map();
+  MM.SYN.forEach(([re, cat]) => re.source.split("|").forEach(w => { w = w.replace(/[^a-z ]/g, "").trim(); if (w.length >= 3) m.set(w, cat); }));
+  return m;
+})();
+let FZ = { S: null };
+function fuzzyIndex(stores) {
+  if (FZ.S === stores || !W.Fuse) return FZ;
+  const docs = stores.map(s => ({ id: s.id, n: norm(s.n), c: norm(s.cats.join(" ")), p: norm([s.prod, s.promo, s.desc].join(" ")), w: norm(s.cor + " " + s.num) }));
+  const opt = { threshold: 0.3, ignoreLocation: true, minMatchCharLength: 3 };
+  FZ = { S: stores, main: new W.Fuse(docs, Object.assign({ keys: [{ name: "n", weight: 3 }, { name: "p", weight: 1.5 }, { name: "c", weight: 1 }, { name: "w", weight: 0.4 }] }, opt)),
+    voc: new W.Fuse([...VOC.keys()].map(w => ({ w })), Object.assign({ keys: ["w"] }, opt)) };
+  return FZ;
+}
+/* ids das lojas que casam, de forma aproximada, com TODAS as palavras da busca */
+function fuzzyIds(stores, toks) {
+  const F = fuzzyIndex(stores); if (!F.main) return null;
+  let acc = null;
+  for (const t of toks) {
+    const set = new Set();
+    if (t.length < 3) stores.forEach(s => { if (s.key.includes(t)) set.add(s.id); });
+    else {
+      F.main.search(t).forEach(r => set.add(r.item.id));
+      F.voc.search(t).slice(0, 3).forEach(r => { const cat = VOC.get(r.item.w); stores.forEach(s => { if (s.cats.includes(cat)) set.add(s.id); }); });
+    }
+    acc = acc ? new Set([...acc].filter(x => set.has(x))) : set;
+    if (!acc.size) break;
+  }
+  return acc || new Set();
+}
 MM.matcher = function (stores, q, seg) {
   q = norm(q).trim().replace(/^(rua|r)\s*0?(\d+)$/, (m, a, n) => "rua " + n.padStart(2, "0"));
   const corMode = q && /^(rua|via|alameda|externa|passarela|subsolo|g3)\b/.test(q) && stores.some(x => norm(x.cor) === q);
   const toks = q ? q.split(/\s+/) : [];
   const syn = q ? MM.SYN.filter(([re]) => re.test(q)).map(x => x[1]) : [];
-  return function (s) {
+  const exact = s => toks.every(t => s.key.includes(t)) || syn.some(c => s.cats.includes(c));
+  let fz = null;
+  if (q && !corMode && !stores.some(exact)) fz = fuzzyIds(stores, toks); /* só entra quando a busca exata não acha nada */
+  const f = function (s) {
     if (seg && !s.cats.includes(seg)) return false;
     if (!q) return true;
     if (corMode) return norm(s.cor) === q;
-    if (toks.every(t => s.key.includes(t))) return true;
-    return syn.some(c => s.cats.includes(c));
+    return fz ? fz.has(s.id) : exact(s);
   };
+  f.fuzzy = !!(fz && fz.size);
+  return f;
 };
 
 /* ---------- planta ---------- */
@@ -418,7 +455,7 @@ MM.draw = function (g, o) {
     const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
     const k = Math.min(1, s.bw / 40, s.bh / 30), ls = lines(s.n);
     h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.2}" style="cursor:pointer" transform="translate(${r1(s.cx)} ${r1(s.cy)}) rotate(${r1(s.ang)})">` +
-      `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="4" fill="${sel ? "#fff4d6" : s.dest ? "#fffaf0" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest ? 1.8 : 1}"/>` +
+      `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="4" fill="${sel ? "#fff4d6" : s.vaga ? "#fff1c2" : s.dest ? "#fffaf0" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest || s.vaga ? 1.8 : 1}"${s.vaga ? ' stroke-dasharray="4 2"' : ""}/>` +
       `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="4" rx="2" fill="${col}"/>`;
     if (k > 0.45) {
       h += `<g transform="rotate(${r1(-s.ang)})"><text y="${r1(-7.5 * k)}" font-size="${r1(10 * k)}" text-anchor="middle">${s.icon || ""}</text>` +
@@ -500,7 +537,7 @@ MM.draw3d = function (g, o) {
   for (const s of stores) {
     const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
     const H = !on ? 3 : sel ? 24 : s.dest ? 16 : 11, k = Math.min(1, s.bw / 40);
-    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? "#fff4d6" : s.dest ? "#fffaf0" : hexMix(col, 255, 0.86), col, sel ? "#d2432c" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
+    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? "#fff4d6" : s.vaga ? "#ffe69a" : s.dest ? "#fffaf0" : hexMix(col, 255, 0.86), col, sel ? "#d2432c" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
     tops[s.id] = bx.top;
     h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.35}" style="cursor:pointer">${bx.h}`;
     if (on) {

@@ -56,3 +56,7 @@ Sem preencher o `config.js` o app funciona em modo estático (dados embutidos, s
 - Mapa em 3D (botão 3D/2D, girar ⟲ ⟳)
 - Minha lista: várias lojas, ordem da mais perto à mais longe, rota única e câmera por parada
 - Ícones por tipo de loja e nova interface (busca, categorias, barra inferior)
+
+- Busca tolerante a erros de digitação (Fuse.js, `fuse.min.js` local) e link direto por loja: `index.html?loja=slug`
+- Boxes vagos: status "vaga" em `lojas` (dourado no mapa, botão "Tenho interesse" via `whatsLocacao` em `config.js`)
+- Painel: marcar vago/ocupado, criar box vago e importar CSV. **Rode o `supabase.sql` de novo** (é idempotente) para criar as colunas `status`/`locacao_info`, os tipos de evento `link`/`locacao` e a visão `metricas_busca`.
