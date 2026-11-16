@@ -62,3 +62,5 @@ Sem preencher o `config.js` o app funciona em modo estático (dados embutidos, s
 - Painel: marcar vago/ocupado, criar box vago e importar CSV. **Rode o `supabase.sql` de novo** (é idempotente) para criar as colunas `status`/`locacao_info`, os tipos de evento `link`/`locacao` e a visão `metricas_busca`.
 
 - Identidade visual do Mega Moda (azul-marinho, rosa e dourado, Roboto), tema claro/escuro (segue o sistema; botão no topo), ícones em SVG e textos sem corte. O ícone da marca é carregado de megamoda.com.br; se estiver fora do ar, aparece o selo "44".
+- Marcos de referência (banheiro, escada rolante, elevador, entrada, informações, alimentação, caixa eletrônico): no painel, aba Planta → "Marcos de referência". Salvos na hora e exibidos em 2D e 3D.
+- Painel, aba Lojas: botão "Carregar lojas de exemplo da Região da 44" (não altera lojas já existentes).

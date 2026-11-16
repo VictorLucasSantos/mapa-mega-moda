@@ -74,6 +74,8 @@ textarea{min-height:76px;resize:vertical}
       <div id="nform" class="hide" style="margin-top:8px"><label>Endereço do box (mesmo formato das lojas: Via – Piso (Loja))</label><input type="text" id="nloc" placeholder="Rua 03 – Térreo (Loja 125)"><label>Informações para o interessado (opcional)</label><input type="text" id="ninfo" maxlength="300" placeholder="Ex.: 12 m², esquina, 2 vagas de estoque"><div class="row"><button class="btn p" id="nsave">Criar box vago</button></div><div class="msg" id="nmsg"></div></div>
       <div id="llist"></div></div>
     <div id="lform"></div>
+    <div class="box"><h2>Dados de exemplo</h2><p class="mut" style="margin-top:0">Carrega no banco as lojas da Região da 44 (nome, segmentos e endereço) para demonstrar o sistema. Lojas que já existem <b>não são alteradas</b>.</p>
+      <div class="row"><button class="btn" id="demo">Carregar lojas de exemplo da Região da 44</button></div><div class="msg" id="demomsg"></div></div>
     <div class="box"><h2>Importar planilha (CSV)</h2>
       <p class="mut" style="margin-top:0">Exporte do Excel/Google Sheets como CSV (separador vírgula ou ponto e vírgula). Colunas aceitas: <b>nome, localizacao, categorias, produtos, descricao, whatsapp, instagram, promo, destaque, status</b> (status: <i>vaga</i> ou <i>ocupada</i>) e, opcionalmente, <b>slug</b>. Lojas já existentes (mesmo slug) são atualizadas e células vazias não apagam dados.</p>
       <div class="row"><input type="file" id="csvf" accept=".csv,text/csv" style="flex:1"><a class="btn" id="csvmodel" download="modelo-lojas.csv">Baixar modelo</a></div>
@@ -97,6 +99,9 @@ textarea{min-height:76px;resize:vertical}
         <button class="btn" id="addk">＋ Ligação</button><button class="btn" id="pfit">⤢</button></div>
       <div id="edwrap" style="margin-top:10px"><svg id="ed" xmlns="http://www.w3.org/2000/svg"></svg></div>
       <div id="segp" class="mut" style="margin-top:8px">Toque em um corredor para ver opções (escala em metros, renomear/excluir ligações).</div>
+      <h3 style="margin:14px 0 6px">Marcos de referência (banheiro, escada, elevador…)</h3>
+      <div class="row"><select id="mt" style="width:auto"></select><button class="btn" id="mput">＋ Colocar no mapa</button><span class="mut" id="mhint">Escolha o tipo, clique no botão e toque no mapa onde fica.</span></div>
+      <div id="mlist" style="margin-top:6px"></div>
       <div class="row">
         <label style="margin:0">Tamanho das lojas <input type="range" id="dep" min="10" max="60"></label>
         <label style="margin:0">Largura do corredor <input type="range" id="cwr" min="6" max="50"></label>
@@ -241,6 +246,17 @@ $("llist").onclick = async e => {
   const it = e.target.closest(".item"); if (!it) return; const r = ALL.find(x => x.slug === it.dataset.s); $("lform").innerHTML = formHTML(r, true); $("lform").scrollIntoView({ behavior: "smooth" }); };
 $("lform").onclick = e => formAct(e, true, async row => { if (row) { const i = ALL.findIndex(x => x.slug === row.slug); if (i >= 0) ALL[i] = row; } else await loadLojas(); listLojas(); });
 
+/* ---------- dados de exemplo ---------- */
+$("demo").onclick = async () => {
+  const m = $("demomsg"), base = MM.embedded(); if (!confirm(`Carregar até ${base.length} lojas de exemplo? Lojas já existentes não serão alteradas.`)) return;
+  const rows = base.map(x => ({ slug: x.s, nome: x.n, categorias: x.c, localizacao: x.l })); let n = 0;
+  for (let i = 0; i < rows.length; i += 200) {
+    const { error } = await sb.from("lojas").upsert(rows.slice(i, i + 200), { onConflict: "slug", ignoreDuplicates: true });
+    if (error) return msg(m, `Parou após ${n}: ${error.message}`); n += Math.min(200, rows.length - i); msg(m, `Carregando… ${n}/${rows.length}`, true);
+  }
+  msg(m, "Pronto. As lojas de exemplo estão no banco e no mapa.", true); await loadLojas();
+};
+
 /* ---------- novo box vago ---------- */
 $("lnew").onclick = () => $("nform").classList.toggle("hide");
 $("nsave").onclick = async () => {
@@ -347,7 +363,7 @@ function openPlanta() {
 $("pg").onchange = () => openGroup($("pg").value);
 function openGroup(k) {
   ed.key = k; ed.sel = null; ed.lay = MM.layoutOf(built.G[k]);
-  $("dep").value = ed.lay.depth; $("cwr").value = ed.lay.cw; preview(); requestAnimationFrame(() => pz.fit(MM.bounds(ed.g), Infinity)); segPanel();
+  $("dep").value = ed.lay.depth; $("cwr").value = ed.lay.cw; ed.putting = null; marcoList(); preview(); requestAnimationFrame(() => pz.fit(MM.bounds(ed.g), Infinity)); segPanel();
   msg($("pmsg"), built.G[k].custom ? "Este piso usa uma planta personalizada." : "Este piso está na planta esquemática automática.", true);
 }
 function preview() {
@@ -372,7 +388,26 @@ function edHandle(h, p, phase) {
   }
   ed.sel = id; preview(); if (phase === "end") segPanel();
 }
-function edTap(target, p, h) { ed.sel = h && h !== "entry" ? h.split("|")[0] : null; preview(); segPanel(); }
+function edTap(target, p, h) {
+  if (ed.putting) { const tipo = ed.putting; ed.putting = null; $("mput").classList.remove("p"); addMarco(tipo, p); return; }
+  ed.sel = h && h !== "entry" ? h.split("|")[0] : null; preview(); segPanel();
+}
+/* marcos: salvos na hora, em layout['marcos'] */
+$("mt").innerHTML = Object.entries(MM.MT).map(([k, v]) => `<option value="${k}">${v[0]} ${v[1]}</option>`).join("");
+$("mput").onclick = () => { ed.putting = $("mt").value; $("mput").classList.add("p"); $("mhint").textContent = "Agora toque no mapa onde fica."; };
+async function addMarco(tipo, p) {
+  const all = Object.assign({}, LAY.marcos || {}); all[ed.key] = (all[ed.key] || []).concat([{ id: "m" + Date.now().toString(36), t: tipo, x: rr(p.x), y: rr(p.y) }]);
+  await saveMarcos(all);
+}
+async function saveMarcos(all) {
+  try { LAY.marcos = all; await persist("marcos", all); rebuild(); preview(); marcoList(); $("mhint").textContent = "Marco salvo. Já vale para todos."; }
+  catch (e) { $("mhint").textContent = "Erro ao salvar: " + e.message; }
+}
+function marcoList() {
+  const l = ((LAY.marcos || {})[ed.key] || []);
+  $("mlist").innerHTML = l.map(m => `<span class="btn" style="margin:2px 4px 2px 0">${MM.MT[m.t] ? MM.MT[m.t][0] + " " + MM.MT[m.t][1] : esc(m.t)} <b data-mdel="${m.id}" style="cursor:pointer;margin-left:6px">✕</b></span>`).join("") || '<span class="mut">Nenhum marco neste piso.</span>';
+}
+$("mlist").onclick = e => { const b = e.target.closest("[data-mdel]"); if (!b) return; const all = Object.assign({}, LAY.marcos || {}); all[ed.key] = (all[ed.key] || []).filter(m => m.id !== b.dataset.mdel); saveMarcos(all); };
 function segPanel() {
   const el = $("segp"); if (!ed.sel) { el.innerHTML = "Toque em um corredor para ver opções (escala em metros, renomear/excluir ligações)."; return; }
   const s = ed.g.segs.find(x => x.id === ed.sel); if (!s) return;

@@ -29,6 +29,9 @@ MM.ICON = {
   "Moda Íntima": "🩲", "Plus Size": "🌸", "Moda Cristã": "🕊️", "Social": "🤵", "Modinha": "✨", "Moda Balada": "🎉",
   "Acessórios": "👜", "Calçados": "👟", "Cosméticos": "💄", "Alimentação": "🍔", "Serviços": "🛎️", "Outlets": "🏷️"
 };
+/* marcos de referência (banheiro, escada, elevador…): ficam em layout['marcos'] = { "<piso>": [{id,t,x,y}] } */
+MM.MT = { wc: ["🚻", "Banheiro"], escada: ["🪜", "Escada rolante"], elevador: ["🛗", "Elevador"], entrada: ["🚪", "Entrada"], info: ["ℹ️", "Informações"], praca: ["🍴", "Alimentação"], caixa: ["🏧", "Caixa eletrônico"] };
+MM.MARCOS = {};
 MM.iconOf = c => MM.ICON[c] || "🛍️";
 const SHOP_T_ORDER = ["Via Mega", "Via Central", "Via Fashion", "Via da Moda", "Via Tendência", "Via Look", "Via Paetê", "Via Tulipa", "Via Acácia", "Via Gérbera", "Alameda dos Eventos", "Alameda Elegante", "Alameda do Sabor", "Alameda Lírio", "Externa 69", "Externa Contorno", "Outros"];
 MM.SYN = [
@@ -230,6 +233,7 @@ function place(g) {
   }
 }
 MM.build = function (raw, layouts) {
+  MM.MARCOS = (layouts && layouts.marcos) || {};
   const stores = raw.map(MM.mk), G = {};
   for (const s of stores) (G[s.g] || (G[s.g] = { key: s.g, b: s.b, f: s.f, stores: [] })).stores.push(s);
   for (const g of Object.values(G)) {
@@ -475,6 +479,7 @@ MM.draw = function (g, o) {
   if (paths.length && !o.stops) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += `<circle cx="${r1(e.x)}" cy="${r1(e.y)}" r="6" fill="var(--acc)" stroke="#fff" stroke-width="2" pointer-events="none"/>`; }
   if (o.stops) for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += `<g pointer-events="none"><circle cx="${r1(s.door.x)}" cy="${r1(s.door.y)}" r="8.5" fill="var(--acc)" stroke="#fff" stroke-width="2.2"/><text x="${r1(s.door.x)}" y="${r1(s.door.y + 3.4)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${n}</text></g>`; }
   if (o.me) h += `<circle class="pulse" cx="${o.me.x}" cy="${o.me.y}" r="8" fill="var(--me)" pointer-events="none"/><circle cx="${o.me.x}" cy="${o.me.y}" r="7" fill="var(--me)" stroke="#fff" stroke-width="2.5" pointer-events="none"/>`;
+  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (t) h += `<g pointer-events="none"><circle cx="${r1(m.x)}" cy="${r1(m.y)}" r="9.5" fill="var(--panel,#fff)" stroke="var(--acc2,#2b2860)" stroke-width="1.8"/><text x="${r1(m.x)}" y="${r1(m.y + 4)}" font-size="11" text-anchor="middle">${t[0]}</text></g>`; }
   if (o.qr) for (const p of o.qr) h += `<g pointer-events="none"><rect x="${p.x - 5}" y="${p.y - 5}" width="10" height="10" rx="2" fill="#111"/><rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="#fff"/></g>`;
   if (o.edit) for (const s of g.segs.filter(x => x.kind === "link").concat(g.segs.filter(x => x.kind === "lane"))) for (const k of [1, 2]) {
     h += `<circle data-h="${s.id}|${k}" cx="${s["x" + k]}" cy="${s["y" + k]}" r="8" fill="${s.kind === "lane" ? "var(--acc2)" : "var(--acc)"}" stroke="#fff" stroke-width="2.5" style="cursor:move"/>`;
@@ -547,6 +552,7 @@ MM.draw3d = function (g, o) {
     }
     h += `</g>`;
   }
+  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (!t) continue; const p = P(m.x, m.y, 3); h += `<g pointer-events="none"><circle cx="${r1(p.x)}" cy="${r1(p.y)}" r="9.5" fill="${D ? "#232250" : "#fff"}" stroke="${D ? "#8f89ff" : "#2b2860"}" stroke-width="1.8"/><text x="${r1(p.x)}" y="${r1(p.y + 4)}" font-size="11" text-anchor="middle">${t[0]}</text></g>`; }
   const lift = paths.map(pa => (pa || []).map(p => P(p.x, p.y, 1.5)));
   lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="${D ? "#14132e" : "#fff"}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
   const pin = (p, fill, label) => `<g pointer-events="none"><line x1="${r1(p.x)}" y1="${r1(p.y)}" x2="${r1(p.x)}" y2="${r1(p.y - 15)}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${r1(p.x)}" cy="${r1(p.y - 20)}" r="8.5" fill="${fill}" stroke="#fff" stroke-width="2.2"/>${label != null ? `<text x="${r1(p.x)}" y="${r1(p.y - 16.8)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${label}</text>` : ""}</g>`;
