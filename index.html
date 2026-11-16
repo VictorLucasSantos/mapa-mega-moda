@@ -138,6 +138,7 @@ footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line)
   <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="fabl"><button id="mark">📍 Marcar onde estou</button></div>
   <div class="fab">
+    <button id="cam" class="on" aria-label="Ver o caminho na câmera">📷</button>
     <button id="v3" class="t3" aria-label="Alternar entre mapa 2D e 3D">3D</button>
     <button id="rl" class="rot" aria-label="Girar para a esquerda">⟲</button>
     <button id="rr" class="rot" aria-label="Girar para a direita">⟳</button>
@@ -324,6 +325,12 @@ function openCam(s, fromList){
     close(){ refresh(); } });
   if (!same) setTimeout(()=>{ const m=document.getElementById("cmsg"); if(m){ m.textContent=`Rota a partir da entrada do ${FLOORS[g.f].split(" ·")[0]} do ${BUILD[g.b].short}. Leia o QR Code de um corredor para começar de onde você está.`; m.style.display="block"; } },300);
 }
+
+$("cam").onclick=()=>{
+  if(st.sel!=null&&STORES[st.sel]) return openCam(STORES[st.sel],false);
+  if(st.list.length){ const o=ensureOrder(); if(o.length) return openCam(o[0],true); }
+  toast("📷 Escolha uma loja (ou monte a lista) e toque aqui para ver o caminho na câmera.",3200);
+};
 
 /* ---------- telas do painel ---------- */
 const leaseLink = s => { const n=(window.MM_CONFIG&&MM_CONFIG.whatsLocacao)||""; return n ? "https://wa.me/"+String(n).replace(/\D/g,"")+"?text="+encodeURIComponent(`Olá! Tenho interesse no box disponível: ${s.loc} (${BUILD[s.b].name}).`) : ""; };
