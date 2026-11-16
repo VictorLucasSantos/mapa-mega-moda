@@ -437,7 +437,7 @@ function routeSvg(paths) {
   paths.forEach((path, k) => {
     if (!path || path.length < 2) return;
     const pts = path.map(p => r1(p.x) + "," + r1(p.y)).join(" ");
-    h += `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>` +
+    h += `<polyline points="${pts}" fill="none" stroke="var(--halo,#fff)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>` +
       `<polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
   });
   return h;
@@ -455,12 +455,12 @@ MM.draw = function (g, o) {
     const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
     const k = Math.min(1, s.bw / 40, s.bh / 30), ls = lines(s.n);
     h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.2}" style="cursor:pointer" transform="translate(${r1(s.cx)} ${r1(s.cy)}) rotate(${r1(s.ang)})">` +
-      `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="4" fill="${sel ? "#fff4d6" : s.vaga ? "#fff1c2" : s.dest ? "#fffaf0" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest || s.vaga ? 1.8 : 1}"${s.vaga ? ' stroke-dasharray="4 2"' : ""}/>` +
+      `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="4" fill="${sel ? "var(--sel,#fff4d6)" : s.vaga ? "var(--vaga,#fff1c2)" : s.dest ? "var(--dest,#fffaf0)" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest || s.vaga ? 1.8 : 1}"${s.vaga ? ' stroke-dasharray="4 2"' : ""}/>` +
       `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="4" rx="2" fill="${col}"/>`;
     if (k > 0.45) {
       h += `<g transform="rotate(${r1(-s.ang)})"><text y="${r1(-7.5 * k)}" font-size="${r1(10 * k)}" text-anchor="middle">${s.icon || ""}</text>` +
-        `<text y="${ls.length > 1 ? r1(1.5 * k) : r1(3.5 * k)}" font-size="${r1(6.2 * k)}" font-weight="700" text-anchor="middle" fill="#2a2420">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
-        `<text y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="#8a7d72">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
+        `<text y="${ls.length > 1 ? r1(1.5 * k) : r1(3.5 * k)}" font-size="${r1(6.2 * k)}" font-weight="700" text-anchor="middle" fill="var(--ink,#2a2420)">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
+        `<text y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="var(--mut,#8a7d72)">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
     } else if (s.bw >= 9) h += `<g transform="rotate(${r1(-s.ang)})"><text y="${r1(3)}" font-size="9" text-anchor="middle">${s.icon || ""}</text></g>`;
     h += `</g>`;
   }
@@ -501,7 +501,8 @@ MM.draw3d = function (g, o) {
   const paths = o.paths || (o.path ? [o.path] : []);
   const poly = (ps, fill, stroke, sw, ex) => `<polygon points="${ps.map(pt).join(" ")}" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="${sw || 1}" stroke-linejoin="round"` : ""}${ex || ""}/>`;
   const vis = (nx, ny) => (nx * V.s + ny * V.c) * V.K > 0.001;
-  const halo = ' paint-order="stroke" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"';
+  const D = !!MM.dark, INK = D ? "#f2f1fb" : "#2a2420";
+  const halo = ` paint-order="stroke" stroke="${D ? "#14132e" : "#fff"}" stroke-width="1.6" stroke-linejoin="round"`;
   const box = (cx, cy, ang, bw, bh, H, topFill, sideCol, stroke, sw) => {
     const a = ang * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
     const loc = [[-bw / 2, -bh / 2], [bw / 2, -bh / 2], [bw / 2, bh / 2], [-bw / 2, bh / 2]].map(([x, y]) => ({ x: cx + x * ca - y * sa, y: cy + x * sa + y * ca }));
@@ -518,36 +519,36 @@ MM.draw3d = function (g, o) {
   const b = V.b, corners = [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]];
   [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([nx, ny], i) => {
     if (!vis(nx, ny)) return; const A = corners[i], B = corners[(i + 1) % 4];
-    h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], -9), P(A[0], A[1], -9)], "#cdbfab", "#bba98f", 0.8);
+    h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], -9), P(A[0], A[1], -9)], D ? "#0c0b22" : "#cdbfab", D ? "#05051a" : "#bba98f", 0.8);
   });
-  h += poly(corners.map(([x, y]) => P(x, y, 0)), "#f4ede2", "#dccfbb", 1);
+  h += poly(corners.map(([x, y]) => P(x, y, 0)), D ? "#1b1a3b" : "#f4ede2", D ? "#2e2d5c" : "#dccfbb", 1);
   if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="0.45" preserveAspectRatio="none" transform="matrix(${V.c} ${V.K * V.s} ${-V.s} ${V.K * V.c} ${-V.c * V.cx + V.s * V.cy} ${V.K * (-V.s * V.cx - V.c * V.cy)})"/>`;
   for (const s of g.segs) {
     const dx = s.x2 - s.x1, dy = s.y2 - s.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * g.cw / 2, ny = dx / len * g.cw / 2;
-    h += poly([P(s.x1 + nx, s.y1 + ny, 0.2), P(s.x2 + nx, s.y2 + ny, 0.2), P(s.x2 - nx, s.y2 - ny, 0.2), P(s.x1 - nx, s.y1 - ny, 0.2)], s.kind === "link" ? "#e6d9c6" : "#ece1d0", "#d9cbb6", 0.6);
+    h += poly([P(s.x1 + nx, s.y1 + ny, 0.2), P(s.x2 + nx, s.y2 + ny, 0.2), P(s.x2 - nx, s.y2 - ny, 0.2), P(s.x1 - nx, s.y1 - ny, 0.2)], s.kind === "link" ? (D ? "#2a2953" : "#e6d9c6") : (D ? "#302f5c" : "#ece1d0"), D ? "#3b3a6b" : "#d9cbb6", 0.6);
   }
   for (const L of g.lanes) {
     const s = L.seg, len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1) || 1, ux = (s.x2 - s.x1) / len, uy = (s.y2 - s.y1) / len;
-    const lab = (t, anchor) => { const p = P(s.x1 + ux * t, s.y1 + uy * t, 0.4); return `<text x="${r1(p.x)}" y="${r1(p.y + 2.5)}" font-size="7.5" font-weight="800" fill="#1d5c63" text-anchor="${anchor}" pointer-events="none"${halo}>${esc(L.name)}</text>`; };
+    const lab = (t, anchor) => { const p = P(s.x1 + ux * t, s.y1 + uy * t, 0.4); return `<text x="${r1(p.x)}" y="${r1(p.y + 2.5)}" font-size="7.5" font-weight="800" fill="${D ? "#c9c6ff" : "#2b2860"}" text-anchor="${anchor}" pointer-events="none"${halo}>${esc(L.name)}</text>`; };
     h += lab(10, "start"); if (len > 260) h += lab(len - 10, "end");
   }
-  { const e = g.entry, bx = box(e.x, e.y, 0, 68, 22, 7, "#1d5c63", "#1d5c63", "#143f44", 0.8); h += bx.h + `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 3)}" font-size="8" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">Entrada/Escadas</text>`; }
+  { const e = g.entry, bx = box(e.x, e.y, 0, 68, 22, 7, "#2b2860", "#2b2860", "#16163f", 0.8); h += bx.h + `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 3)}" font-size="8" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">Entrada/Escadas</text>`; }
   const depth = s => { const dx = s.cx - V.cx, dy = s.cy - V.cy; return dx * V.s + dy * V.c; };
   const stores = g.stores.slice().sort((a, b) => depth(a) - depth(b)), tops = {};
   for (const s of stores) {
     const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
     const H = !on ? 3 : sel ? 24 : s.dest ? 16 : 11, k = Math.min(1, s.bw / 40);
-    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? "#fff4d6" : s.vaga ? "#ffe69a" : s.dest ? "#fffaf0" : hexMix(col, 255, 0.86), col, sel ? "#d2432c" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
+    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? (D ? "#5a2a55" : "#ffe4ee") : s.vaga ? (D ? "#5a4a12" : "#ffe69a") : s.dest ? (D ? "#34304f" : "#fffaf0") : (D ? hexMix(col, 22, 0.7) : hexMix(col, 255, 0.86)), col, sel ? "#cc3366" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
     tops[s.id] = bx.top;
     h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.35}" style="cursor:pointer">${bx.h}`;
     if (on) {
       h += `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 1)}" font-size="${r1(Math.max(8, 11 * k))}" text-anchor="middle" pointer-events="none">${s.icon || ""}</text>`;
-      if (k > 0.5) h += `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 8)}" font-size="${r1(5.8 * k)}" font-weight="700" fill="#2a2420" text-anchor="middle" pointer-events="none"${halo}>${esc(lines(s.n)[0])}</text>`;
+      if (k > 0.5) h += `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 8)}" font-size="${r1(5.8 * k)}" font-weight="700" fill="${INK}" text-anchor="middle" pointer-events="none"${halo}>${esc(lines(s.n)[0])}</text>`;
     }
     h += `</g>`;
   }
   const lift = paths.map(pa => (pa || []).map(p => P(p.x, p.y, 1.5)));
-  lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
+  lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="${D ? "#14132e" : "#fff"}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
   const pin = (p, fill, label) => `<g pointer-events="none"><line x1="${r1(p.x)}" y1="${r1(p.y)}" x2="${r1(p.x)}" y2="${r1(p.y - 15)}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${r1(p.x)}" cy="${r1(p.y - 20)}" r="8.5" fill="${fill}" stroke="#fff" stroke-width="2.2"/>${label != null ? `<text x="${r1(p.x)}" y="${r1(p.y - 16.8)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${label}</text>` : ""}</g>`;
   if (o.stops) { for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += pin(P(s.door.x, s.door.y, 0), "var(--acc)", n); } }
   else if (paths.length) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += pin(P(e.x, e.y, 0), "var(--acc)", null); }

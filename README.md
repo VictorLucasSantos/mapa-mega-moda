@@ -60,3 +60,5 @@ Sem preencher o `config.js` o app funciona em modo estático (dados embutidos, s
 - Busca tolerante a erros de digitação (Fuse.js, `fuse.min.js` local) e link direto por loja: `index.html?loja=slug`
 - Boxes vagos: status "vaga" em `lojas` (dourado no mapa, botão "Tenho interesse" via `whatsLocacao` em `config.js`)
 - Painel: marcar vago/ocupado, criar box vago e importar CSV. **Rode o `supabase.sql` de novo** (é idempotente) para criar as colunas `status`/`locacao_info`, os tipos de evento `link`/`locacao` e a visão `metricas_busca`.
+
+- Identidade visual do Mega Moda (azul-marinho, rosa e dourado, Roboto), tema claro/escuro (segue o sistema; botão no topo), ícones em SVG e textos sem corte. O ícone da marca é carregado de megamoda.com.br; se estiver fora do ar, aparece o selo "44".
