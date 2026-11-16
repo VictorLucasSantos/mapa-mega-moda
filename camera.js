@@ -103,10 +103,15 @@ function pos() {
 }
 function step(d) {
   if (!S) return;
-  if (d > 0 && S.done) return close();
-  if (d > 0) { if (S.i >= S.legs.length - 1) { S.done = true; S.cb.move && S.cb.move(S.store.door); return paint(); } S.i++; }
+  if (d > 0 && S.done) {
+    const n = S.cb.next && S.cb.next();
+    if (!n) return close();
+    S.g = n.g; S.store = n.store; S.done = false; S.lastQR = null; plan(n.from);
+    S.cb.move && S.cb.move(n.from, S.g.key); paint(); if (n.note) note(n.note, 7000); return;
+  }
+  if (d > 0) { if (S.i >= S.legs.length - 1) { S.done = true; S.cb.move && S.cb.move(S.store.door, S.g.key); return paint(); } S.i++; }
   else { if (S.done) S.done = false; else if (S.i > 0) S.i--; }
-  S.walked = 0; S.cb.move && S.cb.move(S.legs[S.i].start); paint();
+  S.walked = 0; S.cb.move && S.cb.move(S.legs[S.i].start, S.g.key); paint();
 }
 function align() {
   if (S.heading == null) return note("Este aparelho não informou a bússola. Siga as instruções do texto e use “Próximo” a cada esquina.");
@@ -140,11 +145,12 @@ function mini() {
 }
 function paint() {
   el.classList.toggle("done", !!S.done);
-  $("cnext").textContent = S.done ? "Concluir ✓" : S.i >= S.legs.length - 1 ? "Cheguei ✓" : "Próximo ▶";
-  if (S.done) { $("cins").innerHTML = "🎉 " + S.arrive; $("csub").textContent = "Procure a fachada da loja."; $("cbar").firstChild.style.width = "100%"; return mini(); }
+  const tag = S.cb.tag ? S.cb.tag() : "", more = !!(S.cb.hasNext && S.cb.hasNext());
+  $("cnext").textContent = S.done ? (more ? "Próxima parada ▶" : "Concluir ✓") : S.i >= S.legs.length - 1 ? "Cheguei ✓" : "Próximo ▶";
+  if (S.done) { $("cins").innerHTML = "🎉 " + (tag ? tag + " · " : "") + S.arrive; $("csub").textContent = more ? "Toque em “Próxima parada” para seguir sua lista." : "Procure a fachada da loja."; $("cbar").firstChild.style.width = "100%"; return mini(); }
   const l = S.legs[S.i];
   if (!l) { S.done = true; return paint(); }
-  $("cins").innerHTML = `${S.i + 1}/${S.legs.length} · Siga ${l.lane ? "pela" : "por"} <b>${esc(l.name || "este corredor")}</b>`;
+  $("cins").innerHTML = `${tag ? tag + " · " : ""}${S.i + 1}/${S.legs.length} · Siga ${l.lane ? "pela" : "por"} <b>${esc(l.name || "este corredor")}</b>`;
   paintArrow(); paintProgress();
   if (S.north == null) note(S.compass === false ? "Sem bússola: use o texto e o botão “Próximo” a cada esquina." : "Aponte a câmera ao longo do corredor, no sentido da linha azul do mapinha, e toque em 🧭 Alinhar.");
 }
@@ -158,8 +164,8 @@ async function scanLoop() {
     try {
       const r = await det.detect(v); if (!r.length) return;
       const m = /#(qr-[a-z0-9-]+)/.exec(r[0].rawValue || ""); if (!m || m[1] === S.lastQR) return;
-      const p = S.cb.qr && S.cb.qr(m[1]); if (!p) return;
-      S.lastQR = m[1]; S.done = false; plan(p); S.cb.move && S.cb.move(p); note("📍 Posição atualizada pelo QR Code do corredor.", 3000); paint();
+      const p = S.cb.qr && S.cb.qr(m[1], S.g); if (!p) return;
+      S.lastQR = m[1]; S.done = false; plan(p); S.cb.move && S.cb.move(p, S.g.key); note("📍 Posição atualizada pelo QR Code do corredor.", 3000); paint();
       try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
     } catch (e) {}
   }, 700);

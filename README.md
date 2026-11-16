@@ -50,3 +50,9 @@ Sem preencher o `config.js` o app funciona em modo estático (dados embutidos, s
 - Lojas com endereço "Rua 01–21" foram atribuídas ao Mega Moda Park e "Via Pirulito/Caramelo" ao Mini Moda por dedução; confira no local.
 - Estatísticas não guardam dados pessoais: só um identificador aleatório por aparelho, termos buscados e lojas abertas.
 - Uso comercial dos dados e da marca depende de autorização do Grupo Mega Moda.
+
+
+## Novidades
+- Mapa em 3D (botão 3D/2D, girar ⟲ ⟳)
+- Minha lista: várias lojas, ordem da mais perto à mais longe, rota única e câmera por parada
+- Ícones por tipo de loja e nova interface (busca, categorias, barra inferior)

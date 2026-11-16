@@ -24,6 +24,12 @@ MM.SEGS = [
   ["Serviços", "#7d8790"], ["Outlets", "#555555"]
 ];
 MM.SEGCOLOR = Object.fromEntries(MM.SEGS);
+MM.ICON = {
+  "Feminino": "👗", "Masculino": "👔", "Jeans": "👖", "Infantil": "🧸", "Moda Praia": "👙", "Moda Fitness": "🏋️",
+  "Moda Íntima": "🩲", "Plus Size": "🌸", "Moda Cristã": "🕊️", "Social": "🤵", "Modinha": "✨", "Moda Balada": "🎉",
+  "Acessórios": "👜", "Calçados": "👟", "Cosméticos": "💄", "Alimentação": "🍔", "Serviços": "🛎️", "Outlets": "🏷️"
+};
+MM.iconOf = c => MM.ICON[c] || "🛍️";
 const SHOP_T_ORDER = ["Via Mega", "Via Central", "Via Fashion", "Via da Moda", "Via Tendência", "Via Look", "Via Paetê", "Via Tulipa", "Via Acácia", "Via Gérbera", "Alameda dos Eventos", "Alameda Elegante", "Alameda do Sabor", "Alameda Lírio", "Externa 69", "Externa Contorno", "Outros"];
 MM.SYN = [
   [/biquin|maio|saida de praia|praia|sunga|beach/, "Moda Praia"],
@@ -116,7 +122,7 @@ MM.mk = function (o, i) {
   const om = num.match(/\d+/); const ord = om ? +om[0] : 99999;
   const b = /^Rua /.test(cor) ? "park" : /Pirulito|Caramelo/.test(cor) ? "mini" : "shopping";
   const prim = cats.find(x => x !== "Feminino") || cats[0] || "Outlets";
-  return { id: i, n: o.n, s: o.s, cats, loc: l, f, cor, num, ord, b, g: b + "|" + f, prim,
+  return { id: i, n: o.n, s: o.s, cats, loc: l, f, cor, num, ord, b, g: b + "|" + f, prim, icon: MM.iconOf(prim),
     desc: o.desc || "", prod: o.prod || "", whats: o.whats || "", insta: o.insta || "", promo: o.promo || "", dest: !!o.dest,
     key: norm([o.n, cats.join(" "), cor, num, o.prod, o.desc, o.promo].join(" ")) };
 };
@@ -245,7 +251,7 @@ MM.nearest = function (g, p, exceptId) {
   g.segs.forEach((s, i) => { if (s.id === exceptId) return; const q = proj(p, s); if (!best || q.d < best.d) best = Object.assign(q, { i, seg: s }); });
   return best;
 };
-MM.route = function (g, from, to) {
+function solve(g, from, tos) {
   const segs = g.segs, TOL = 14, nodes = [], idx = new Map(), adj = [], brk = segs.map(() => []);
   const node = (x, y) => { const k = Math.round(x * 2) + "," + Math.round(y * 2); let id = idx.get(k); if (id == null) { id = nodes.length; idx.set(k, id); nodes.push({ x, y }); adj.push([]); } return id; };
   const edge = (a, b, w, si) => { if (a === b) return; adj[a].push({ to: b, w, si }); adj[b].push({ to: a, w, si }); };
@@ -259,23 +265,33 @@ MM.route = function (g, from, to) {
       if (q.d < TOL && q.d > 0.01) edge(add(a, q), node(e.x, e.y), q.d, b);
     }
   }
-  const nf = MM.nearest(g, from), nt = MM.nearest(g, to);
-  if (!nf || !nt) return null;
-  const S = add(nf.i, nf), D = add(nt.i, nt);
+  const nf = MM.nearest(g, from);
+  if (!nf) return null;
+  const S = add(nf.i, nf);
+  const Ds = tos.map(p => { const q = MM.nearest(g, p); return q ? add(q.i, q) : -1; });
   segs.forEach((s, i) => { const L = Math.hypot(s.x2 - s.x1, s.y2 - s.y1); brk[i].sort((a, b) => a.t - b.t); for (let k = 1; k < brk[i].length; k++) edge(brk[i][k - 1].id, brk[i][k].id, (brk[i][k].t - brk[i][k - 1].t) * L, i); });
   const dist = nodes.map(() => Infinity), prev = nodes.map(() => null), done = nodes.map(() => false);
   dist[S] = 0;
   for (;;) {
     let u = -1; for (let i = 0; i < nodes.length; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
-    if (u < 0 || dist[u] === Infinity) break; done[u] = true; if (u === D) break;
+    if (u < 0 || dist[u] === Infinity) break; done[u] = true;
     for (const e of adj[u]) if (dist[u] + e.w < dist[e.to]) { dist[e.to] = dist[u] + e.w; prev[e.to] = { u, si: e.si }; }
   }
-  if (dist[D] === Infinity) return null;
-  const pts = [], es = [];
+  return { nodes, dist, prev, S, Ds, segs };
+}
+MM.route = function (g, from, to) {
+  const r = solve(g, from, [to]);
+  if (!r || r.Ds[0] < 0 || r.dist[r.Ds[0]] === Infinity) return null;
+  const D = r.Ds[0], { nodes, prev, segs } = r, pts = [], es = [];
   for (let v = D; v != null; v = prev[v] ? prev[v].u : null) { pts.unshift(nodes[v]); if (prev[v]) es.unshift({ si: prev[v].si, len: Math.hypot(nodes[v].x - nodes[prev[v].u].x, nodes[v].y - nodes[prev[v].u].y) }); }
   const legs = [];
   for (const e of es) { const l = legs[legs.length - 1]; if (l && l.seg === segs[e.si]) l.len += e.len; else legs.push({ seg: segs[e.si], len: e.len }); }
-  return { pts, legs, len: dist[D] };
+  return { pts, legs, len: r.dist[D] };
+};
+/* distâncias (em unidades do mapa) de um ponto até várias portas, com um único cálculo por piso */
+MM.routeLens = function (g, from, tos) {
+  const r = solve(g, from, tos);
+  return tos.map((_, i) => r && r.Ds[i] >= 0 ? r.dist[r.Ds[i]] : Infinity);
 };
 MM.meters = (u, g) => Math.max(5, Math.round(u * g.mpu / 5) * 5);
 /* passo a passo dentro de um piso: de `from` até a porta da loja `s` */
@@ -300,6 +316,56 @@ MM.walk = function (g, from, s, label) {
   }
   steps.push(arrive(side));
   return { pts: [from].concat(r.pts), steps };
+};
+
+/* ---------- trajeto completo (entre pisos e prédios), distâncias e ordem por proximidade ---------- */
+const plen = pts => { let d = 0; for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return d; };
+MM.PEN = { floor: 25, building: 90 };   // metros "equivalentes" para trocar de andar ou de prédio
+MM.leg = function (G, from, s, label) {
+  const g = G[s.g], B = MM.BUILD[s.b], steps = [], parts = []; let m = 0, warn = "";
+  const floorMove = f0 => {
+    if (s.f === f0) return;
+    if (s.f === "G3" || f0 === "G3") steps.push(`Vá até a área <b>${MM.FLOORS[s.f]}</b> (siga as placas “G3”).`);
+    else steps.push(`Pegue a escada rolante/elevador e ${MM.FLEVEL[s.f] > MM.FLEVEL[f0] ? "suba" : "desça"} para o <b>${MM.FLOORS[s.f]}</b>.`);
+  };
+  const walkIn = (start, lab) => { const w = MM.walk(g, start, s, lab); steps.push(...w.steps); parts.push({ g: g.key, pts: w.pts }); m += plen(w.pts) * g.mpu; };
+  const exitTo = fg => { const r = MM.route(fg, from, fg.entry); if (r) { parts.push({ g: fg.key, pts: [from].concat(r.pts) }); m += r.len * fg.mpu; } };
+  const fg = from && G[from.g];
+  if (!fg) {
+    steps.push(`Vá até o <b>${B.name}</b> (${esc(B.addr)}).`); floorMove("T"); walkIn(g.entry, "Da entrada,");
+    warn = "Marque sua posição (📍, QR Code do corredor ou “Estou nesta loja”) para a rota sair de onde você está.";
+  } else if (fg.b !== s.b) {
+    steps.push(`Saia do <b>${MM.BUILD[fg.b].name}</b> e vá ao <b>${B.name}</b> — os prédios do complexo ficam lado a lado.`);
+    exitTo(fg); m += MM.PEN.building; floorMove("T"); if (s.f !== "T") m += MM.PEN.floor; walkIn(g.entry, "Da entrada,");
+  } else if (from.g !== s.g) {
+    steps.push("Vá até a escada/elevador mais próximo."); exitTo(fg); m += MM.PEN.floor; floorMove(fg.f); walkIn(g.entry, "Saindo da escada,");
+  } else walkIn(from, label || "De onde você está,");
+  return { steps, warn, m, parts };
+};
+/* metros (aprox.) de `from` até a porta de cada loja — usado para ordenar listas "do mais perto ao mais longe" */
+MM.distMany = function (G, from, stores) {
+  const out = new Map(), by = {}; stores.forEach(s => (by[s.g] || (by[s.g] = [])).push(s));
+  const fg = G[from.g]; let toEntry = null;
+  const fin = d => isFinite(d) ? d : 9999;
+  for (const k in by) {
+    const g = G[k], list = by[k];
+    if (k === from.g) { const d = MM.routeLens(g, from, list.map(s => s.door)); list.forEach((s, i) => out.set(s.id, fin(d[i] * g.mpu))); continue; }
+    if (toEntry == null) toEntry = fin(MM.routeLens(fg, from, [fg.entry])[0] * fg.mpu);
+    const pen = g.b === fg.b ? MM.PEN.floor : MM.PEN.building + (g.f === "T" ? 0 : MM.PEN.floor);
+    const d = MM.routeLens(g, g.entry, list.map(s => s.door));
+    list.forEach((s, i) => out.set(s.id, toEntry + pen + fin(d[i] * g.mpu)));
+  }
+  return out;
+};
+/* ordem de visita "vizinho mais próximo": a cada parada, vai para a loja restante mais perto da anterior */
+MM.orderNearest = function (G, ref, stores) {
+  const left = stores.slice(), out = []; let cur = ref;
+  while (left.length) {
+    const d = MM.distMany(G, cur, left); let bi = 0;
+    left.forEach((s, i) => { if (d.get(s.id) < d.get(left[bi].id)) bi = i; });
+    const s = left.splice(bi, 1)[0]; out.push(s); cur = { g: s.g, x: s.door.x, y: s.door.y };
+  }
+  return out;
 };
 
 /* ---------- QR Codes de posição ---------- */
@@ -329,8 +395,19 @@ function lines(name) {
   }
   return out;
 }
+function routeSvg(paths) {
+  let h = "";
+  paths.forEach((path, k) => {
+    if (!path || path.length < 2) return;
+    const pts = path.map(p => r1(p.x) + "," + r1(p.y)).join(" ");
+    h += `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>` +
+      `<polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
+  });
+  return h;
+}
 MM.draw = function (g, o) {
   o = o || {}; let h = "";
+  const paths = o.paths || (o.path ? [o.path] : []);
   if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="${o.edit ? 0.75 : 0.45}" preserveAspectRatio="none"/>`;
   for (const s of g.segs) {
     const col = o.selSeg === s.id ? "#f0b65c" : s.loose ? "#f3c1b8" : s.kind === "link" && o.edit ? "#d9cdbd" : "var(--corr)";
@@ -344,9 +421,10 @@ MM.draw = function (g, o) {
       `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="4" fill="${sel ? "#fff4d6" : s.dest ? "#fffaf0" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest ? 1.8 : 1}"/>` +
       `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="4" rx="2" fill="${col}"/>`;
     if (k > 0.45) {
-      h += `<g transform="rotate(${r1(-s.ang)})"><text y="${ls.length > 1 ? -4 * k : -1}" font-size="${r1(6.4 * k)}" font-weight="700" text-anchor="middle" fill="#2a2420">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7.2 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
-        `<text y="${r1(14 * k)}" font-size="${r1(5.6 * k)}" text-anchor="middle" fill="#8a7d72">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
-    }
+      h += `<g transform="rotate(${r1(-s.ang)})"><text y="${r1(-7.5 * k)}" font-size="${r1(10 * k)}" text-anchor="middle">${s.icon || ""}</text>` +
+        `<text y="${ls.length > 1 ? r1(1.5 * k) : r1(3.5 * k)}" font-size="${r1(6.2 * k)}" font-weight="700" text-anchor="middle" fill="#2a2420">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
+        `<text y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="#8a7d72">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
+    } else if (s.bw >= 9) h += `<g transform="rotate(${r1(-s.ang)})"><text y="${r1(3)}" font-size="9" text-anchor="middle">${s.icon || ""}</text></g>`;
     h += `</g>`;
   }
   for (const L of g.lanes) {
@@ -356,17 +434,87 @@ MM.draw = function (g, o) {
     h += lab(6, flip ? "end" : "start");
     if (len > 260) h += lab(len - 6, flip ? "start" : "end");
   }
-  if (o.path && o.path.length > 1) {
-    const pts = o.path.map(p => r1(p.x) + "," + r1(p.y)).join(" "), e = o.path[o.path.length - 1];
-    h += `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
-      `<polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round"/>` +
-      `<circle cx="${r1(e.x)}" cy="${r1(e.y)}" r="6" fill="var(--acc)" stroke="#fff" stroke-width="2"/>`;
-  }
-  if (o.me) h += `<circle class="pulse" cx="${o.me.x}" cy="${o.me.y}" r="8" fill="var(--me)"/><circle cx="${o.me.x}" cy="${o.me.y}" r="7" fill="var(--me)" stroke="#fff" stroke-width="2.5"/>`;
+  h += routeSvg(paths);
+  if (paths.length && !o.stops) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += `<circle cx="${r1(e.x)}" cy="${r1(e.y)}" r="6" fill="var(--acc)" stroke="#fff" stroke-width="2" pointer-events="none"/>`; }
+  if (o.stops) for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += `<g pointer-events="none"><circle cx="${r1(s.door.x)}" cy="${r1(s.door.y)}" r="8.5" fill="var(--acc)" stroke="#fff" stroke-width="2.2"/><text x="${r1(s.door.x)}" y="${r1(s.door.y + 3.4)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${n}</text></g>`; }
+  if (o.me) h += `<circle class="pulse" cx="${o.me.x}" cy="${o.me.y}" r="8" fill="var(--me)" pointer-events="none"/><circle cx="${o.me.x}" cy="${o.me.y}" r="7" fill="var(--me)" stroke="#fff" stroke-width="2.5" pointer-events="none"/>`;
   if (o.qr) for (const p of o.qr) h += `<g pointer-events="none"><rect x="${p.x - 5}" y="${p.y - 5}" width="10" height="10" rx="2" fill="#111"/><rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="#fff"/></g>`;
   if (o.edit) for (const s of g.segs.filter(x => x.kind === "link").concat(g.segs.filter(x => x.kind === "lane"))) for (const k of [1, 2]) {
     h += `<circle data-h="${s.id}|${k}" cx="${s["x" + k]}" cy="${s["y" + k]}" r="8" fill="${s.kind === "lane" ? "var(--acc2)" : "var(--acc)"}" stroke="#fff" stroke-width="2.5" style="cursor:move"/>`;
   }
+  return h;
+};
+
+/* ---------- visão 3D (projeção ortográfica inclinada, girável) ---------- */
+MM.proj3 = function (g, rot) {
+  const b = MM.bounds(g), cx = b.x + b.w / 2, cy = b.y + b.h / 2, th = (rot || 0) * Math.PI / 180, c = Math.cos(th), s = Math.sin(th), K = 0.62, Z = 0.79;
+  const P = (x, y, z) => { const dx = x - cx, dy = y - cy; return { x: dx * c - dy * s, y: (dx * s + dy * c) * K - (z || 0) * Z }; };
+  const inv = (sx, sy) => { const xr = sx, yr = sy / K; return { x: cx + c * xr + s * yr, y: cy - s * xr + c * yr }; };
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.h], [b.x + b.w, b.y + b.h]]) for (const z of [-9, 28]) { const p = P(x, y, z); x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+  return { P, inv, c, s, K, Z, cx, cy, rot: rot || 0, b, bounds: { x: x0 - 6, y: y0 - 6, w: x1 - x0 + 12, h: y1 - y0 + 12 } };
+};
+function hexMix(h, to, t) {
+  if (!/^#[0-9a-f]{6}$/i.test(h)) return h;
+  const n = parseInt(h.slice(1), 16), f = v => Math.round(v + (to - v) * t);
+  return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
+}
+MM.draw3d = function (g, o) {
+  o = o || {}; const V = o.V, P = V.P, pt = p => r1(p.x) + "," + r1(p.y);
+  const paths = o.paths || (o.path ? [o.path] : []);
+  const poly = (ps, fill, stroke, sw, ex) => `<polygon points="${ps.map(pt).join(" ")}" fill="${fill}"${stroke ? ` stroke="${stroke}" stroke-width="${sw || 1}" stroke-linejoin="round"` : ""}${ex || ""}/>`;
+  const vis = (nx, ny) => (nx * V.s + ny * V.c) * V.K > 0.001;
+  const halo = ' paint-order="stroke" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"';
+  const box = (cx, cy, ang, bw, bh, H, topFill, sideCol, stroke, sw) => {
+    const a = ang * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    const loc = [[-bw / 2, -bh / 2], [bw / 2, -bh / 2], [bw / 2, bh / 2], [-bw / 2, bh / 2]].map(([x, y]) => ({ x: cx + x * ca - y * sa, y: cy + x * sa + y * ca }));
+    let h = "";
+    [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([x, y], i) => {
+      const nx = x * ca - y * sa, ny = x * sa + y * ca; if (!vis(nx, ny)) return;
+      const A = loc[i], B = loc[(i + 1) % 4], lx = nx * V.c - ny * V.s;
+      h += poly([P(A.x, A.y, 0), P(B.x, B.y, 0), P(B.x, B.y, H), P(A.x, A.y, H)], hexMix(sideCol, 0, 0.1 + 0.22 * (lx + 1) / 2), "rgba(0,0,0,.18)", 0.5);
+    });
+    h += poly(loc.map(p => P(p.x, p.y, H)), topFill, stroke, sw);
+    return { h, top: P(cx, cy, H) };
+  };
+  let h = "";
+  const b = V.b, corners = [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]];
+  [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([nx, ny], i) => {
+    if (!vis(nx, ny)) return; const A = corners[i], B = corners[(i + 1) % 4];
+    h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], -9), P(A[0], A[1], -9)], "#cdbfab", "#bba98f", 0.8);
+  });
+  h += poly(corners.map(([x, y]) => P(x, y, 0)), "#f4ede2", "#dccfbb", 1);
+  if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="0.45" preserveAspectRatio="none" transform="matrix(${V.c} ${V.K * V.s} ${-V.s} ${V.K * V.c} ${-V.c * V.cx + V.s * V.cy} ${V.K * (-V.s * V.cx - V.c * V.cy)})"/>`;
+  for (const s of g.segs) {
+    const dx = s.x2 - s.x1, dy = s.y2 - s.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * g.cw / 2, ny = dx / len * g.cw / 2;
+    h += poly([P(s.x1 + nx, s.y1 + ny, 0.2), P(s.x2 + nx, s.y2 + ny, 0.2), P(s.x2 - nx, s.y2 - ny, 0.2), P(s.x1 - nx, s.y1 - ny, 0.2)], s.kind === "link" ? "#e6d9c6" : "#ece1d0", "#d9cbb6", 0.6);
+  }
+  for (const L of g.lanes) {
+    const s = L.seg, len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1) || 1, ux = (s.x2 - s.x1) / len, uy = (s.y2 - s.y1) / len;
+    const lab = (t, anchor) => { const p = P(s.x1 + ux * t, s.y1 + uy * t, 0.4); return `<text x="${r1(p.x)}" y="${r1(p.y + 2.5)}" font-size="7.5" font-weight="800" fill="#1d5c63" text-anchor="${anchor}" pointer-events="none"${halo}>${esc(L.name)}</text>`; };
+    h += lab(10, "start"); if (len > 260) h += lab(len - 10, "end");
+  }
+  { const e = g.entry, bx = box(e.x, e.y, 0, 68, 22, 7, "#1d5c63", "#1d5c63", "#143f44", 0.8); h += bx.h + `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 3)}" font-size="8" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">Entrada/Escadas</text>`; }
+  const depth = s => { const dx = s.cx - V.cx, dy = s.cy - V.cy; return dx * V.s + dy * V.c; };
+  const stores = g.stores.slice().sort((a, b) => depth(a) - depth(b)), tops = {};
+  for (const s of stores) {
+    const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
+    const H = !on ? 3 : sel ? 24 : s.dest ? 16 : 11, k = Math.min(1, s.bw / 40);
+    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? "#fff4d6" : s.dest ? "#fffaf0" : hexMix(col, 255, 0.86), col, sel ? "#d2432c" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
+    tops[s.id] = bx.top;
+    h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.35}" style="cursor:pointer">${bx.h}`;
+    if (on) {
+      h += `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 1)}" font-size="${r1(Math.max(8, 11 * k))}" text-anchor="middle" pointer-events="none">${s.icon || ""}</text>`;
+      if (k > 0.5) h += `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 8)}" font-size="${r1(5.8 * k)}" font-weight="700" fill="#2a2420" text-anchor="middle" pointer-events="none"${halo}>${esc(lines(s.n)[0])}</text>`;
+    }
+    h += `</g>`;
+  }
+  const lift = paths.map(pa => (pa || []).map(p => P(p.x, p.y, 1.5)));
+  lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
+  const pin = (p, fill, label) => `<g pointer-events="none"><line x1="${r1(p.x)}" y1="${r1(p.y)}" x2="${r1(p.x)}" y2="${r1(p.y - 15)}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${r1(p.x)}" cy="${r1(p.y - 20)}" r="8.5" fill="${fill}" stroke="#fff" stroke-width="2.2"/>${label != null ? `<text x="${r1(p.x)}" y="${r1(p.y - 16.8)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${label}</text>` : ""}</g>`;
+  if (o.stops) { for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += pin(P(s.door.x, s.door.y, 0), "var(--acc)", n); } }
+  else if (paths.length) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += pin(P(e.x, e.y, 0), "var(--acc)", null); }
+  if (o.me) { const p = P(o.me.x, o.me.y, 0); h += `<ellipse class="pulse3" cx="${r1(p.x)}" cy="${r1(p.y)}" rx="13" ry="${r1(13 * V.K)}" fill="var(--me)" opacity=".28" pointer-events="none"/>` + pin(p, "var(--me)", null); }
   return h;
 };
 
