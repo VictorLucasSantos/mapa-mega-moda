@@ -1,0 +1,16 @@
+{
+  "name": "Mapa Mega Moda · Região da 44",
+  "short_name": "Mapa 44",
+  "description": "Encontre lojas e produtos no Mega Moda (Goiânia) e veja a rota até a loja.",
+  "lang": "pt-BR",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f1ea",
+  "theme_color": "#d2432c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
