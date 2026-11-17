@@ -527,6 +527,10 @@ MM.draw3d = function (g, o) {
     h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], -9), P(A[0], A[1], -9)], D ? "#0c0b22" : "#cdbfab", D ? "#05051a" : "#bba98f", 0.8);
   });
   h += poly(corners.map(([x, y]) => P(x, y, 0)), D ? "#1b1a3b" : "#f4ede2", D ? "#2e2d5c" : "#dccfbb", 1);
+  [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([nx, ny], i) => {
+    if (vis(nx, ny)) return; const A = corners[i], B = corners[(i + 1) % 4];
+    h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], 16), P(A[0], A[1], 16)], D ? "#26254f" : "#e8e0d2", D ? "#3d3c72" : "#b9ad99", 0.9);
+  });
   if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="0.45" preserveAspectRatio="none" transform="matrix(${V.c} ${V.K * V.s} ${-V.s} ${V.K * V.c} ${-V.c * V.cx + V.s * V.cy} ${V.K * (-V.s * V.cx - V.c * V.cy)})"/>`;
   for (const s of g.segs) {
     const dx = s.x2 - s.x1, dy = s.y2 - s.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * g.cw / 2, ny = dx / len * g.cw / 2;
@@ -537,13 +541,19 @@ MM.draw3d = function (g, o) {
     const lab = (t, anchor) => { const p = P(s.x1 + ux * t, s.y1 + uy * t, 0.4); return `<text x="${r1(p.x)}" y="${r1(p.y + 2.5)}" font-size="7.5" font-weight="800" fill="${D ? "#c9c6ff" : "#2b2860"}" text-anchor="${anchor}" pointer-events="none"${halo}>${esc(L.name)}</text>`; };
     h += lab(10, "start"); if (len > 260) h += lab(len - 10, "end");
   }
+  for (const s of g.segs) {
+    if (s.kind === "link") continue;
+    const dx = s.x2 - s.x1, dy = s.y2 - s.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * g.cw / 2, ny = dx / len * g.cw / 2, ec = D ? "#4b4a86" : "#b7a78d";
+    [1, -1].forEach(k => { const a = P(s.x1 + nx * k, s.y1 + ny * k, 0.3), c = P(s.x2 + nx * k, s.y2 + ny * k, 0.3); h += `<line x1="${r1(a.x)}" y1="${r1(a.y)}" x2="${r1(c.x)}" y2="${r1(c.y)}" stroke="${ec}" stroke-width="1" pointer-events="none"/>`; });
+  }
+  for (const s of g.stores) { if (!s.door) continue; const a = P(s.door.x, s.door.y, 0.5); h += `<ellipse cx="${r1(a.x)}" cy="${r1(a.y)}" rx="3.2" ry="${r1(3.2 * V.K)}" fill="${s.vaga ? "#e2a400" : (D ? "#8f89ff" : "#2b2860")}" opacity=".85" pointer-events="none"/>`; }
   { const e = g.entry, bx = box(e.x, e.y, 0, 68, 22, 7, "#2b2860", "#2b2860", "#16163f", 0.8); h += bx.h + `<text x="${r1(bx.top.x)}" y="${r1(bx.top.y + 3)}" font-size="8" font-weight="800" fill="#fff" text-anchor="middle" pointer-events="none">Entrada/Escadas</text>`; }
   const depth = s => { const dx = s.cx - V.cx, dy = s.cy - V.cy; return dx * V.s + dy * V.c; };
   const stores = g.stores.slice().sort((a, b) => depth(a) - depth(b)), tops = {};
   for (const s of stores) {
     const on = !o.filter || o.filter(s), sel = o.sel === s.id, col = MM.SEGCOLOR[s.prim] || "#999";
-    const H = !on ? 3 : sel ? 24 : s.dest ? 16 : 11, k = Math.min(1, s.bw / 40);
-    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? (D ? "#5a2a55" : "#ffe4ee") : s.vaga ? (D ? "#5a4a12" : "#ffe69a") : s.dest ? (D ? "#34304f" : "#fffaf0") : (D ? hexMix(col, 22, 0.7) : hexMix(col, 255, 0.86)), col, sel ? "#cc3366" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
+    const H = !on ? 3 : sel ? 26 : s.dest ? 18 : 14, k = Math.min(1, s.bw / 40), wall = D ? "#4a4880" : "#d8d0c2";
+    const bx = box(s.cx, s.cy, s.ang, s.bw, s.bh, H, sel ? (D ? "#5a2a55" : "#ffe4ee") : s.vaga ? (D ? "#5a4a12" : "#ffe69a") : s.dest ? (D ? "#34304f" : "#fffaf0") : (D ? hexMix(col, 22, 0.7) : hexMix(col, 255, 0.78)), sel ? col : wall, sel ? "#cc3366" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "rgba(0,0,0,.25)", sel ? 2 : s.dest ? 1.6 : 0.6);
     tops[s.id] = bx.top;
     h += `<g data-id="${s.id}" opacity="${on ? 1 : 0.35}" style="cursor:pointer">${bx.h}`;
     if (on) {
