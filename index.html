@@ -218,11 +218,11 @@ function centerOn(x,y,w){ const p = st.v3 ? V().P(x,y,0) : {x,y}; pz.center(p.x,
 function fit(){ const g=G[st.g]; if(g) pz.fit(st.v3 ? V().bounds : MM.bounds(g)); }
 function draw(){
   const g=G[st.g]; if(!g) return;
-  let paths=null; const s = st.sel!=null ? STORES[st.sel] : null;
-  if (st.view==="store" && s){ paths = MM.leg(G,fromPos(),s,"").parts.filter(p=>p.g===st.g).map(p=>p.pts); }
-  else if (st.view==="list" && st.list.length){ paths=[]; planList().forEach(l=>l.parts.forEach(p=>{ if(p.g===st.g) paths.push(p.pts); })); }
+  let paths=null, badges=[]; const s = st.sel!=null ? STORES[st.sel] : null;
+  if (st.view==="store" && s){ const lg=MM.leg(G,fromPos(),s,""); paths = lg.parts.filter(p=>p.g===st.g).map(p=>p.pts); badges=lg.vert.filter(v=>v.g===st.g); }
+  else if (st.view==="list" && st.list.length){ paths=[]; planList().forEach(l=>{ l.parts.forEach(p=>{ if(p.g===st.g) paths.push(p.pts); }); (l.vert||[]).forEach(v=>{ if(v.g===st.g) badges.push(v); }); }); }
   const stops={}; ensureOrder().forEach((x,i)=>stops[x.id]=i+1);
-  const o={filter:filtering()?match:null, sel:st.sel, paths, me:st.me&&st.me.g===st.g?st.me:null, stops:Object.keys(stops).length?stops:null};
+  const o={filter:filtering()?match:null, sel:st.sel, paths, badges, me:st.me&&st.me.g===st.g?st.me:null, stops:Object.keys(stops).length?stops:null};
   $("map").innerHTML = st.v3 ? MM.draw3d(g,Object.assign(o,{V:V()})) : MM.draw(g,o);
 }
 $("zin").onclick=()=>pz.zoom(1.4); $("zout").onclick=()=>pz.zoom(1/1.4); $("zfit").onclick=fit;
@@ -315,7 +315,8 @@ function openCam(s, fromList){
   const order = fromList ? ensureOrder() : [];
   let idx = fromList ? order.findIndex(x=>x.id===s.id) : -1;
   const more = () => fromList && idx>=0 && idx<order.length-1;
-  MM.cam.open({ g, store:s, from: same ? me : g.entry,
+  const arr=same?null:((MM.leg(G,me,s,"").vert||[]).find(v=>v.g===s.g)||g.entry);
+  MM.cam.open({ g, store:s, from: same ? me : arr,
     move(p,key){ st.me={g:key||g.key,x:p.x,y:p.y,how:"cam"}; saveMe(); },
     qr(code,gg){ const r=MM.resolveQR(code,G); if(!r||r.g!==gg.key) return null; MM.track("qr",{ponto:code}); return {x:r.x,y:r.y}; },
     tag(){ return fromList&&idx>=0 ? `Parada ${idx+1}/${order.length}` : ""; },

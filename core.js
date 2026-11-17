@@ -362,15 +362,32 @@ MM.walk = function (g, from, s, label) {
 /* ---------- trajeto completo (entre pisos e prédios), distâncias e ordem por proximidade ---------- */
 const plen = pts => { let d = 0; for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return d; };
 MM.PEN = { floor: 25, building: 90 };   // metros "equivalentes" para trocar de andar ou de prédio
+MM.VN = { escada: { a: "a escada rolante", d: "da escada" }, elevador: { a: "o elevador", d: "do elevador" } };
+/* ponto de passagem entre pisos: escada/elevador marcado no piso (o mais perto de `from`); sem marcos, a entrada/escadas do piso */
+MM.vert = function (fg, from) {
+  const ms = (MM.MARCOS[fg.key] || []).filter(m => MM.VN[m.t]);
+  if (!ms.length) return { x: fg.entry.x, y: fg.entry.y, t: null };
+  const d = MM.routeLens(fg, from, ms.map(m => ({ x: m.x, y: m.y })));
+  let bi = 0; d.forEach((v, i) => { if (v < d[bi]) bi = i; });
+  return { x: ms[bi].x, y: ms[bi].y, t: ms[bi].t };
+};
+/* onde a pessoa chega no piso de destino: escada/elevador do mesmo tipo mais próximo da posição de origem (as escadas se alinham entre pisos) */
+MM.arrival = function (g, ex) {
+  const ms = (MM.MARCOS[g.key] || []).filter(m => MM.VN[m.t]);
+  if (!ms.length || !ex.t) return { x: g.entry.x, y: g.entry.y };
+  const same = ms.filter(m => m.t === ex.t), pool = same.length ? same : ms;
+  let b = pool[0]; pool.forEach(m => { if (Math.hypot(m.x - ex.x, m.y - ex.y) < Math.hypot(b.x - ex.x, b.y - ex.y)) b = m; });
+  return { x: b.x, y: b.y };
+};
 MM.leg = function (G, from, s, label) {
-  const g = G[s.g], B = MM.BUILD[s.b], steps = [], parts = []; let m = 0, warn = "";
-  const floorMove = f0 => {
+  const g = G[s.g], B = MM.BUILD[s.b], steps = [], parts = [], vert = []; let m = 0, warn = "";
+  const floorMove = (f0, how) => {
     if (s.f === f0) return;
     if (s.f === "G3" || f0 === "G3") steps.push(`Vá até a área <b>${MM.FLOORS[s.f]}</b> (siga as placas “G3”).`);
-    else steps.push(`Pegue a escada rolante/elevador e ${MM.FLEVEL[s.f] > MM.FLEVEL[f0] ? "suba" : "desça"} para o <b>${MM.FLOORS[s.f]}</b>.`);
+    else steps.push(`Pegue ${how || "a escada rolante/elevador"} e ${MM.FLEVEL[s.f] > MM.FLEVEL[f0] ? "suba" : "desça"} para o <b>${MM.FLOORS[s.f]}</b>.`);
   };
   const walkIn = (start, lab) => { const w = MM.walk(g, start, s, lab); steps.push(...w.steps); parts.push({ g: g.key, pts: w.pts }); m += plen(w.pts) * g.mpu; };
-  const exitTo = fg => { const r = MM.route(fg, from, fg.entry); if (r) { parts.push({ g: fg.key, pts: [from].concat(r.pts) }); m += r.len * fg.mpu; } };
+  const exitTo = (fg, to) => { to = to || fg.entry; const r = MM.route(fg, from, to); if (r) { parts.push({ g: fg.key, pts: [from].concat(r.pts) }); m += r.len * fg.mpu; } };
   const fg = from && G[from.g];
   if (!fg) {
     steps.push(`Vá até o <b>${B.name}</b> (${esc(B.addr)}).`); floorMove("T"); walkIn(g.entry, "Da entrada,");
@@ -379,9 +396,13 @@ MM.leg = function (G, from, s, label) {
     steps.push(`Saia do <b>${MM.BUILD[fg.b].name}</b> e vá ao <b>${B.name}</b> — os prédios do complexo ficam lado a lado.`);
     exitTo(fg); m += MM.PEN.building; floorMove("T"); if (s.f !== "T") m += MM.PEN.floor; walkIn(g.entry, "Da entrada,");
   } else if (from.g !== s.g) {
-    steps.push("Vá até a escada/elevador mais próximo."); exitTo(fg); m += MM.PEN.floor; floorMove(fg.f); walkIn(g.entry, "Saindo da escada,");
+    const ex = MM.vert(fg, from), ar = MM.arrival(g, ex), nm = ex.t ? MM.VN[ex.t] : null;
+    steps.push(nm ? `Vá até ${nm.a} mais perto de você (marcado no mapa com ${MM.MT[ex.t][0]}).` : "Vá até a escada/elevador mais próximo.");
+    exitTo(fg, ex); m += MM.PEN.floor; floorMove(fg.f, nm && nm.a); walkIn(ar, ex.t ? "Saindo " + nm.d + "," : "Saindo da escada,");
+    const up = MM.FLEVEL[s.f] > MM.FLEVEL[fg.f], fl = MM.FLOORS[s.f].split(" ·")[0];
+    vert.push({ g: fg.key, x: ex.x, y: ex.y, text: (up ? "↑ Suba" : "↓ Desça") + " para o " + fl }, { g: g.key, x: ar.x, y: ar.y, text: "Você chega aqui" });
   } else walkIn(from, label || "De onde você está,");
-  return { steps, warn, m, parts };
+  return { steps, warn, m, parts, vert };
 };
 /* metros (aprox.) de `from` até a porta de cada loja — usado para ordenar listas "do mais perto ao mais longe" */
 MM.distMany = function (G, from, stores) {
@@ -476,6 +497,7 @@ MM.draw = function (g, o) {
     if (len > 260) h += lab(len - 6, flip ? "start" : "end");
   }
   h += routeSvg(paths);
+  (o.badges || []).forEach(bd => { h += MM.badgeSvg(bd.x, bd.y, bd.text, !!MM.dark); });
   if (paths.length && !o.stops) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += `<circle cx="${r1(e.x)}" cy="${r1(e.y)}" r="6" fill="var(--acc)" stroke="#fff" stroke-width="2" pointer-events="none"/>`; }
   if (o.stops) for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += `<g pointer-events="none"><circle cx="${r1(s.door.x)}" cy="${r1(s.door.y)}" r="8.5" fill="var(--acc)" stroke="#fff" stroke-width="2.2"/><text x="${r1(s.door.x)}" y="${r1(s.door.y + 3.4)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${n}</text></g>`; }
   if (o.me) h += `<circle class="pulse" cx="${o.me.x}" cy="${o.me.y}" r="8" fill="var(--me)" pointer-events="none"/><circle cx="${o.me.x}" cy="${o.me.y}" r="7" fill="var(--me)" stroke="#fff" stroke-width="2.5" pointer-events="none"/>`;
@@ -501,6 +523,7 @@ function hexMix(h, to, t) {
   const n = parseInt(h.slice(1), 16), f = v => Math.round(v + (to - v) * t);
   return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
 }
+MM.badgeSvg = (x, y, text, D) => { const w = text.length * 5.4 + 16; return `<g pointer-events="none"><rect x="${r1(x - w / 2)}" y="${r1(y - 22)}" width="${r1(w)}" height="16" rx="8" fill="${D ? "#ffc933" : "#2b2860"}" stroke="${D ? "#14132e" : "#fff"}" stroke-width="1.5"/><text x="${r1(x)}" y="${r1(y - 10.5)}" font-size="9" font-weight="800" fill="${D ? "#16163f" : "#fff"}" text-anchor="middle">${esc(text)}</text><circle cx="${r1(x)}" cy="${r1(y)}" r="3" fill="${D ? "#ffc933" : "#2b2860"}"/></g>`; };
 MM.draw3d = function (g, o) {
   o = o || {}; const V = o.V, P = V.P, pt = p => r1(p.x) + "," + r1(p.y);
   const paths = o.paths || (o.path ? [o.path] : []);
@@ -566,6 +589,7 @@ MM.draw3d = function (g, o) {
   const lift = paths.map(pa => (pa || []).map(p => P(p.x, p.y, 1.5)));
   lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="${D ? "#14132e" : "#fff"}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
   const pin = (p, fill, label) => `<g pointer-events="none"><line x1="${r1(p.x)}" y1="${r1(p.y)}" x2="${r1(p.x)}" y2="${r1(p.y - 15)}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${r1(p.x)}" cy="${r1(p.y - 20)}" r="8.5" fill="${fill}" stroke="#fff" stroke-width="2.2"/>${label != null ? `<text x="${r1(p.x)}" y="${r1(p.y - 16.8)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${label}</text>` : ""}</g>`;
+  (o.badges || []).forEach(bd => { const p = P(bd.x, bd.y, 0); h += MM.badgeSvg(p.x, p.y, bd.text, D); });
   if (o.stops) { for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += pin(P(s.door.x, s.door.y, 0), "var(--acc)", n); } }
   else if (paths.length) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += pin(P(e.x, e.y, 0), "var(--acc)", null); }
   if (o.me) { const p = P(o.me.x, o.me.y, 0); h += `<ellipse class="pulse3" cx="${r1(p.x)}" cy="${r1(p.y)}" rx="13" ry="${r1(13 * V.K)}" fill="var(--me)" opacity=".28" pointer-events="none"/>` + pin(p, "var(--me)", null); }
