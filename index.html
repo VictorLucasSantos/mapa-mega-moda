@@ -321,7 +321,7 @@ const pz = MM.panZoom($("map"), $("mapwrap"), {
   }
 });
 function centerOn(x,y,w){ const p = st.v3 ? V().P(x,y,0) : {x,y}; pz.center(p.x,p.y,w); }
-function fit(){ const g=G[st.g]; if(g) pz.fit(st.v3 ? V().bounds : MM.bounds(g)); }
+function fit(){ const g=G[st.g]; if(g) pz.fit(st.v3 ? V().bounds : MM.bounds(g), g.plan ? Infinity : undefined); } /* planta desenhada: mostra o desenho inteiro */
 function draw(){
   const g=G[st.g]; if(!g) return;
   let paths=null, badges=[]; const s = st.sel!=null ? STORES[st.sel] : null;

@@ -550,7 +550,7 @@ $("mlist").onclick = e => {
 };
 function delMarco(id) { const all = Object.assign({}, LAY.marcos || {}); all[ed.key] = (all[ed.key] || []).filter(m => m.id !== id); if (ed.sel === "M:" + id) ed.sel = null; saveMarcos(all); }
 const KN = { loja: "Loja", area: "Corredor / área comum", praca: "Praça / alimentação", bloco: "Bloco (sem loja)" };
-function storesHere() { return (built.G[ed.key] || { stores: [] }).stores; }
+function storesHere() { const g = built.G[ed.key] || { stores: [] }; return g.all || g.stores; }
 function shapePanel(sh) {
   const el = $("segp"), st = sh.s ? storesHere().find(x => x.s === sh.s) : null, inf = MM.polyInfo(sh.pts);
   el.innerHTML = `<b style="color:var(--ink)">${KN[sh.k] || "Forma"}${st ? " · " + esc(st.n) : sh.t ? " · " + esc(sh.t) : ""}</b> — ${sh.pts.length} cantos · ~${Math.round(inf.w * ed.lay.mpu)}×${Math.round(inf.h * ed.lay.mpu)} m.
@@ -773,8 +773,8 @@ async function detectShapes() {
   snap(); ed.lay.shapes = shapes;
   if (links.length) {
     ed.lay.links = links;
-    /* corredores "de cadastro" (nome do corredor de cada loja) vão para baixo da planta, como área de espera das lojas ainda sem forma */
-    let i = 0; for (const k in ed.lay.lanes) { const q = ed.lay.lanes[k], len = Math.max(120, Math.hypot(q.x2 - q.x1, q.y2 - q.y1)); const y = bg.h + 120 + i++ * 110; ed.lay.lanes[k] = { x1: 40, y1: y, x2: 40 + len, y2: y }; }
+    /* corredores "de cadastro" saem do mapa: na planta desenhada só aparece o que está no desenho (lojas sem forma ficam na lista "sem forma") */
+    ed.lay.lanes = {};
     let be = null, bd = Infinity; for (const l of links) for (const [x, y] of [[l.x1, l.y1], [l.x2, l.y2]]) { const d = Math.hypot(x - bg.w / 2, y - bg.h); if (d < bd) { bd = d; be = { x, y }; } }
     if (be) ed.lay.entry = be;
   }

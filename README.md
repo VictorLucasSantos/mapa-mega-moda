@@ -39,7 +39,8 @@ Sem preencher o `config.js` o app funciona em modo estático (dados embutidos, s
 ## Dia a dia
 
 - **Lojista**: cria conta no painel → você vincula a loja ao e-mail dele (aba Lojas → Vincular). Ele edita descrição, produtos/palavras-chave, promoção, WhatsApp e Instagram. Nome, endereço, segmentos e destaque (★) só o administrador altera.
-- **Planta real**: aba Planta → envie a foto/planta do piso → arraste cada corredor para o lugar → informe o comprimento real de um corredor (escala) → Salvar. Pisos sem planta desenhada continuam no esquema automático.
+- **Planta real**: num piso com planta desenhada aparecem só as formas do desenho; loja sem forma não vira ponto fora da imagem e o nome dos corredores de cadastro não aparece (vincule a loja a uma forma na lista "sem forma"). Prédio **Planta real** (`real`): lojas com localização `Mall – Térreo`.
+- **Planta (esquemático)**: aba Planta → envie a foto/planta do piso → arraste cada corredor para o lugar → informe o comprimento real de um corredor (escala) → Salvar. Pisos sem planta desenhada continuam no esquema automático.
 - **QR Codes**: aba QR Codes → confira o endereço do app → Imprimir → cole cada etiqueta no ponto indicado (entrada, início/meio/fim de cada corredor). Os quadradinhos pretos no editor de planta mostram onde cada QR fica.
 - **Atualizar lojas a partir do site**: `pip install requests && python atualizar_lojas.py && python build.py`, publique o `lojas-data.js` novo e rode o `seed.sql` novo (não apaga o que os lojistas editaram).
 

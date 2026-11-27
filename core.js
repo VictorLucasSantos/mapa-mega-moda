@@ -11,9 +11,11 @@ MM.online = () => !!(CFG.url && CFG.key) && HTTP;
 MM.BUILD = {
   shopping: { name: "Mega Moda Shopping", short: "Shopping", addr: "Av. Contorno, 165 – Setor Norte Ferroviário, Goiânia – GO", lat: -16.6612, lng: -49.2578 },
   park: { name: "Mega Moda Park", short: "Park", addr: "Av. Independência, 3302 – Setor Central, Goiânia – GO", lat: -16.6628, lng: -49.2560 },
-  mini: { name: "Mini Moda", short: "Mini Moda", addr: "Rua 67-B, 141b – Setor Norte Ferroviário, Goiânia – GO", lat: -16.6602, lng: -49.2569 }
+  mini: { name: "Mini Moda", short: "Mini Moda", addr: "Rua 67-B, 141b – Setor Norte Ferroviário, Goiânia – GO", lat: -16.6602, lng: -49.2569 },
+  /* prédio com planta real desenhada (lojas com localização "Mall – Térreo") */
+  real: { name: "Shopping (planta real)", short: "Planta real", addr: "", lat: -16.6612, lng: -49.2578 }
 };
-MM.BORDER = ["shopping", "park", "mini"];
+MM.BORDER = ["shopping", "park", "mini", "real"];
 MM.FLOORS = { SS: "Subsolo", T: "Térreo", P1: "Piso 1", G3: "G3 · Serviços e cargas" };
 MM.FLEVEL = { SS: -1, T: 0, P1: 1, G3: 0 };
 MM.SEGS = [
@@ -128,7 +130,7 @@ MM.mk = function (o, i) {
   let num = pm ? pm[1] : "";
   for (let k = 0; k < 2; k++) num = num.replace(/^(Loja|LJ|ML|G3)\s*/i, "").trim();
   const om = num.match(/\d+/); const ord = om ? +om[0] : 99999;
-  const b = /^Rua /.test(cor) ? "park" : /Pirulito|Caramelo/.test(cor) ? "mini" : "shopping";
+  const b = /^Rua /.test(cor) ? "park" : /Pirulito|Caramelo/.test(cor) ? "mini" : /^Mall$/.test(cor) ? "real" : "shopping";
   const prim = cats.find(x => x !== "Feminino") || cats[0] || "Outlets";
   return { id: i, n: o.n, s: o.s, cats, loc: l, f, cor, num, ord, b, g: b + "|" + f, prim, icon: o.vaga ? "🔑" : MM.iconOf(prim), ik: o.vaga ? "_vaga" : prim,
     desc: o.desc || "", prod: o.prod || "", whats: o.whats || "", insta: o.insta || "", promo: o.promo || "", dest: !!o.dest,
@@ -209,15 +211,21 @@ function custom(g, lay) {
   for (const k in lay.lanes) maxY = Math.max(maxY, lay.lanes[k].y1, lay.lanes[k].y2);
   (lay.links || []).forEach(k => { maxY = Math.max(maxY, k.y1, k.y2); });
   let j = 0;
+  /* planta desenhada: só valem corredores posicionados dentro do desenho; os demais ficam fora do mapa (sem rótulo, rota nem pontos de loja) */
+  const plan = g.shapes.length > 0; let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+  for (const sh of g.shapes) for (const [x, y] of sh.pts) { bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
+  if (g.bg) { bx0 = Math.min(bx0, 0); by0 = Math.min(by0, 0); bx1 = Math.max(bx1, g.bg.w); by1 = Math.max(by1, g.bg.h); }
+  const inPlan = q => { const x = (q.x1 + q.x2) / 2, y = (q.y1 + q.y2) / 2; return x >= bx0 && x <= bx1 && y >= by0 && y <= by1; };
   g.lanes.forEach(L => {
     const q = lay.lanes[L.slug];
     const s = q ? { x1: q.x1, y1: q.y1, x2: q.x2, y2: q.y2 }
       : { x1: 40, y1: maxY + 90 + j * LANE, x2: 40 + 80 + Math.max(3, Math.ceil(L.list.length / 2)) * CELL, y2: maxY + 90 + (j++) * LANE };
     L.seg = Object.assign({ id: "L:" + L.slug, name: L.name, kind: "lane", loose: !q }, s);
-    L.t0 = null; g.segs.push(L.seg);
+    L.t0 = null; L.off = plan && (!q || !inPlan(q));
+    if (!L.off) g.segs.push(L.seg);
   });
   (lay.links || []).forEach(k => g.segs.push({ id: "K:" + k.id, name: k.name || "corredor principal", kind: "link", x1: k.x1, y1: k.y1, x2: k.x2, y2: k.y2 }));
-  g.entry = lay.entry || { x: g.segs[0].x1, y: g.segs[0].y1 };
+  g.entry = lay.entry || (g.segs[0] ? { x: g.segs[0].x1, y: g.segs[0].y1 } : { x: 40, y: 40 });
 }
 function place(g) {
   for (const L of g.lanes) {
@@ -285,6 +293,9 @@ MM.build = function (raw, layouts) {
     if (lay && lay.lanes) custom(g, lay); else schematic(g);
     place(g);
     shapes(g);
+    /* planta desenhada: loja sem forma, num corredor fora do desenho, não aparece no mapa (s.off); o corredor também some */
+    if (g.plan) { for (const s of g.stores) if (!s.poly && s.lane && s.lane.off) s.off = true;
+      g.all = g.stores; g.stores = g.stores.filter(s => !s.off); g.lanes = g.lanes.filter(L => !L.off); }
   }
   return { stores, G };
 };
@@ -443,7 +454,7 @@ MM.leg = function (G, from, s, label) {
   const exitTo = (fg, to) => { to = to || fg.entry; const r = MM.route(fg, from, to); if (r) { parts.push({ g: fg.key, pts: [from].concat(r.pts) }); m += r.len * fg.mpu; } };
   const fg = from && G[from.g];
   if (!fg) {
-    steps.push(`Vá até o <b>${B.name}</b> (${esc(B.addr)}).`); floorMove("T"); walkIn(g.entry, "Da entrada,");
+    steps.push(`Vá até o <b>${B.name}</b>${B.addr ? ` (${esc(B.addr)})` : ""}.`); floorMove("T"); walkIn(g.entry, "Da entrada,");
     warn = "Marque sua posição (📍, QR Code do corredor ou “Estou nesta loja”) para a rota sair de onde você está.";
   } else if (fg.b !== s.b) {
     steps.push(`Saia do <b>${MM.BUILD[fg.b].name}</b> e vá ao <b>${B.name}</b> — os prédios do complexo ficam lado a lado.`);
@@ -538,7 +549,7 @@ MM.qrPoints = function (g) {
   return out;
 };
 MM.resolveQR = function (hash, G) {
-  const m = /^qr-(shopping|park|mini)-(t|p1|ss|g3)-(.+)$/.exec(hash || "");
+  const m = /^qr-(shopping|park|mini|real)-(t|p1|ss|g3)-(.+)$/.exec(hash || "");
   if (!m) return null;
   const g = G[m[1] + "|" + m[2].toUpperCase()]; if (!g) return null;
   const p = MM.qrPoints(g).find(q => q.code === hash);
