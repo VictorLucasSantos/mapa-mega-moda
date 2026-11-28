@@ -830,6 +830,8 @@ function boot(data){
 /* visão inicial: perto do usuário ou da entrada, já legível (o botão ⤢ mostra o andar inteiro) */
 function initialView(){
   const g=G[st.g]; if(!g) return;
+  /* loja aberta (link ?loja= ou recarga dos dados): mantém o mapa nela */
+  if (st.view==="store" && st.sel!=null && STORES[st.sel]){ const s=STORES[st.sel]; return centerOn(s.door.x,s.door.y,340); }
   if (filtering()) return fit();
   const m=fromPos(); if (m && m.g===st.g) return centerOn(m.x,m.y,440);
   centerOn(g.entry.x+(g.b==="park"?110:210),g.entry.y+(g.b==="park"?240:150),g.b==="park"?420:500);
