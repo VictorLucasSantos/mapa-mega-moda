@@ -580,11 +580,13 @@ function routeSvg(paths) {
 MM.draw = function (g, o) {
   o = o || {}; let h = "";
   const paths = o.paths || (o.path ? [o.path] : []);
-  if (g.bg && (o.edit || !g.plan)) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="${o.edit ? (g.plan ? 0.35 : 0.75) : 0.45}" preserveAspectRatio="none"/>`;
+  /* planta desenhada com imagem: no app a própria imagem é o mapa; as formas ficam transparentes por cima (clique, destaque e rota) */
+  const img = !o.edit && g.plan && !!g.bg;
+  if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="${o.edit ? (g.plan ? 0.35 : 0.75) : img ? 1 : 0.45}" preserveAspectRatio="none"/>`;
   const SHC = { area: "var(--corr)", praca: "var(--praca,#efe6d2)", bloco: "var(--block,#ddd6cc)", loja: "var(--store)" };
   const ptsS = (pts, dx, dy) => pts.map(([x, y]) => r1(x - (dx || 0)) + "," + r1(y - (dy || 0))).join(" ");
   /* chão: áreas comuns e praças primeiro */
-  for (const sh of g.shapes || []) if (sh.k === "area" || sh.k === "praca") {
+  for (const sh of g.shapes || []) if (!img && (sh.k === "area" || sh.k === "praca")) {
     const sel = o.selSeg === "S:" + sh.id;
     h += `<polygon ${o.edit ? `data-h="S:${sh.id}|m" style="cursor:move"` : 'pointer-events="none"'} points="${ptsS(sh.pts)}" fill="${SHC[sh.k]}" stroke="${sel ? "#e65100" : o.edit ? "rgba(0,0,0,.18)" : "none"}" stroke-width="${sel ? 2.5 : 1}" stroke-linejoin="round"/>`;
     if (sh.t) h += `<text class="zc" x="${r1(sh.cx)}" y="${r1(sh.cy + 4)}" font-size="${r1(Math.max(9, Math.min(16, sh.w / (sh.t.length * 0.7))))}" font-weight="900" fill="var(--acc2)" text-anchor="middle" pointer-events="none" letter-spacing=".5">${esc(sh.t.toUpperCase())}</text>`;
@@ -594,7 +596,7 @@ MM.draw = function (g, o) {
     const op = g.hasArea ? (o.edit ? (o.selSeg === s.id ? 0.9 : 0.45) : 0) : g.bg ? 0.85 : 1;
     h += `<line ${o.edit ? `data-h="${s.id}|m"` : 'pointer-events="none"'} x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${col}" stroke-width="${g.hasArea && o.edit ? Math.min(g.cw, 10) : g.cw}" stroke-linecap="round" opacity="${op}"/>`;
   }
-  for (const sh of g.shapes || []) if (sh.k === "bloco" || (sh.k === "loja" && (!sh.st || o.edit))) {
+  for (const sh of g.shapes || []) if (!img && (sh.k === "bloco" || (sh.k === "loja" && (!sh.st || o.edit)))) {
     const sel = o.selSeg === "S:" + sh.id, nm = sh.st ? sh.st.n : sh.t || "";
     h += `<polygon ${o.edit ? `data-h="S:${sh.id}|m" style="cursor:move"` : 'pointer-events="none"'} points="${ptsS(sh.pts)}" fill="${sh.k === "bloco" ? SHC.bloco : o.edit && !sh.st ? "#fff7e8" : SHC.loja}" stroke="${sel ? "#e65100" : o.edit && !sh.st && sh.k === "loja" ? "#d08a2c" : "var(--line,#d8cfc2)"}" stroke-width="${sel ? 2.6 : 1.2}" stroke-linejoin="round"${o.edit && !sh.st && sh.k === "loja" ? ' stroke-dasharray="5 3"' : ""}/>`;
     if (nm || o.edit) { const fs = Math.max(6.5, Math.min(15, Math.min(sh.w / Math.max(4, (nm || "?").length * 0.62), sh.h * 0.32)));
@@ -606,12 +608,13 @@ MM.draw = function (g, o) {
     if (s.poly && o.edit) continue;
     const k = s.poly ? Math.max(0.7, Math.min(1.9, Math.min(s.bw / 46, s.bh / 34))) : Math.min(1, s.bw / 40, s.bh / 30), ls = lines(s.n);
     h += `<g data-id="${s.id}" class="${s.dest || s.prim === "Alimentação" || s.big > 90 ? "anc" : ""}" opacity="${on ? 1 : 0.2}" style="cursor:pointer" transform="translate(${r1(s.cx)} ${r1(s.cy)}) rotate(${r1(s.ang)})">` +
-      (s.poly ? `<polygon points="${ptsS(s.poly)}" fill="${sel ? "var(--sel,#fff4d6)" : s.vaga ? "var(--vaga,#fff1c2)" : s.dest ? "var(--dest,#fffaf0)" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "var(--line,#d8cfc2)"}" stroke-width="${sel ? 2.6 : s.dest || s.vaga ? 1.8 : 1.2}" stroke-linejoin="round"${s.vaga ? ' stroke-dasharray="4 2"' : ""}/>` +
-        `<polygon class="tint" points="${ptsS(s.poly)}" fill="${col}" pointer-events="none"/>`
+      (s.poly ? `<polygon points="${ptsS(s.poly)}" fill="${sel ? "var(--sel,#fff4d6)" : s.vaga ? "var(--vaga,#fff1c2)" : s.dest ? "var(--dest,#fffaf0)" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : "var(--line,#d8cfc2)"}" stroke-width="${sel ? 2.6 : s.dest || s.vaga ? 1.8 : 1.2}" stroke-linejoin="round"${s.vaga ? ' stroke-dasharray="4 2"' : ""}${img ? ` fill-opacity="${sel ? 0.35 : 0.01}" stroke-opacity="${sel ? 1 : 0}"` : ""}/>` +
+        `<polygon class="tint" points="${ptsS(s.poly)}" fill="${col}" pointer-events="none"${img ? ' fill-opacity=".12"' : ""}/>`
       : `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="6" fill="${sel ? "var(--sel,#fff4d6)" : s.vaga ? "var(--vaga,#fff1c2)" : s.dest ? "var(--dest,#fffaf0)" : "var(--store)"}" stroke="${sel ? "var(--acc)" : s.vaga ? "#c98a00" : s.dest ? "#e2a400" : col}" stroke-width="${sel ? 2.4 : s.dest || s.vaga ? 1.8 : 1}"${s.vaga ? ' stroke-dasharray="4 2"' : ""}/>` +
       `<rect class="tint" x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="${s.bh}" rx="6" fill="${col}" pointer-events="none"/>` +
       `<rect x="${-s.bw / 2}" y="${-s.bh / 2}" width="${s.bw}" height="4" rx="2" fill="${col}"/>`);
-    if (k > 0.45) {
+    if (img) { /* o logo já está na imagem: só o marcador com o nome */ }
+    else if (k > 0.45) {
       h += `<g transform="rotate(${r1(-s.ang)})"><g class="zi">${MM.icoSvg(s.ik, 0, -10.5 * k, 11 * k, s.vaga ? "#c98a00" : col)}</g>` +
         `<text class="zl" y="${ls.length > 1 ? r1(1.5 * k) : r1(3.5 * k)}" font-size="${r1(6.2 * k)}" font-weight="700" text-anchor="middle" fill="var(--ink,#2a2420)">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
         `<text class="zn" y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="var(--mut,#8a7d72)">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
@@ -703,13 +706,13 @@ MM.draw3d = function (g, o) {
     if (vis(nx, ny)) return; const A = corners[i], B = corners[(i + 1) % 4];
     h += poly([P(A[0], A[1], 0), P(B[0], B[1], 0), P(B[0], B[1], 16), P(A[0], A[1], 16)], D ? "#26254f" : "#e8e0d2", D ? "#3d3c72" : "#b9ad99", 0.9);
   });
-  if (g.bg && !g.plan) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="0.45" preserveAspectRatio="none" transform="matrix(${V.c} ${V.K * V.s} ${-V.s} ${V.K * V.c} ${-V.c * V.cx + V.s * V.cy} ${V.K * (-V.s * V.cx - V.c * V.cy)})"/>`;
+  if (g.bg) h += `<image href="${g.bg.src}" x="0" y="0" width="${g.bg.w}" height="${g.bg.h}" opacity="${g.plan ? 1 : 0.45}" preserveAspectRatio="none" transform="matrix(${V.c} ${V.K * V.s} ${-V.s} ${V.K * V.c} ${-V.c * V.cx + V.s * V.cy} ${V.K * (-V.s * V.cx - V.c * V.cy)})"/>`;
   if (!g.hasArea) for (const s of g.segs) {
     const dx = s.x2 - s.x1, dy = s.y2 - s.y1, len = Math.hypot(dx, dy) || 1, nx = -dy / len * g.cw / 2, ny = dx / len * g.cw / 2;
     h += poly([P(s.x1 + nx, s.y1 + ny, 0.2), P(s.x2 + nx, s.y2 + ny, 0.2), P(s.x2 - nx, s.y2 - ny, 0.2), P(s.x1 - nx, s.y1 - ny, 0.2)], s.kind === "link" ? (D ? "#2a2953" : "#e6d9c6") : (D ? "#302f5c" : "#ece1d0"), D ? "#3b3a6b" : "#d9cbb6", 0.6);
   }
   for (const sh of g.shapes || []) {
-    if (sh.k === "area" || sh.k === "praca") h += poly(sh.pts.map(([x, y]) => P(x, y, 0.25)), sh.k === "praca" ? (D ? "#3a3560" : "#efe2c8") : (D ? "#302f5c" : "#ece1d0"), D ? "#3b3a6b" : "#d9cbb6", 0.6);
+    if (!g.bg && (sh.k === "area" || sh.k === "praca")) h += poly(sh.pts.map(([x, y]) => P(x, y, 0.25)), sh.k === "praca" ? (D ? "#3a3560" : "#efe2c8") : (D ? "#302f5c" : "#ece1d0"), D ? "#3b3a6b" : "#d9cbb6", 0.6);
     else if (sh.k === "bloco" || (sh.k === "loja" && !sh.st)) h += box(0, 0, 0, 0, 0, sh.k === "bloco" ? 10 : 6, D ? "#2a2850" : "#e9e2d6", D ? "#4a4880" : "#d8d0c2", "rgba(0,0,0,.2)", 0.6, sh.pts).h;
     if (sh.t && (sh.k === "area" || sh.k === "praca")) { const p = P(sh.cx, sh.cy, 0.5); h += `<text x="${r1(p.x)}" y="${r1(p.y)}" font-size="9" font-weight="900" fill="${D ? "#c9c6ff" : "#2b2860"}" text-anchor="middle" pointer-events="none"${halo}>${esc(sh.t.toUpperCase())}</text>`; }
   }
