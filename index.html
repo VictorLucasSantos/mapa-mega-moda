@@ -3,171 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#2b2860">
-<script>try{var t=JSON.parse(localStorage.getItem("mm_theme")||"null");if(!t)t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="theme-color" content="#16163f">
+<script>try{var t=JSON.parse(localStorage.getItem("mm_theme")||"null");if(!t)t="light";document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>Mapa Mega Moda · Região da 44</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f3fa;--panel:#fff;--ink:#1c1b3a;--mut:#65638a;--line:#e2e0f0;--acc:#cc3366;--acc2:#2b2860;--corr:#e4e2f2;--store:#fff;--me:#1a73e8;--sel:#ffe4ee;--vaga:#fff1c2;--dest:#fff7e0;--halo:#fff;--chip:#eeedf8;--navy:#2b2860;--navy2:#16163f;--gold:#ffc233;--shadow:0 2px 10px rgba(30,28,80,.14);--lst:#e65100;--glass:rgba(255,255,255,.78)}
-[data-theme=dark]{--bg:#0e0e24;--panel:#191938;--ink:#f1f0fb;--mut:#a9a7cf;--line:#2c2b58;--acc:#ff5c93;--acc2:#8f89ff;--corr:#2a2952;--store:#24234c;--me:#5aa0ff;--sel:#4d2650;--vaga:#4d3f10;--dest:#2f2c4d;--halo:#14132e;--chip:#26254f;--shadow:0 2px 12px rgba(0,0,0,.5);--lst:#ffa040;--glass:rgba(25,25,56,.78)}
+/* Catálogo de atacado: cada loja é uma REF; o mapa é a página onde ela é apontada */
+:root{--bg:#f6f5fa;--panel:#fff;--panel2:#efeef7;--ink:#17163a;--mut:#58567c;--line:#dcdaea;--acc:#cc3366;--acc-ink:#fff;--acc2:#2b2860;--corr:#e4e2f2;--store:#fff;--me:#1a73e8;--sel:#ffe4ee;--vaga:#fff1c2;--dest:#fff7e0;--halo:#fff;--chip:#eeedf6;--navy:#2b2860;--navy2:#16163f;--gold:#ffc233;--gold-ink:#7a5200;--ok:#0b7a3b;--warn-bg:#fff4d6;--warn-line:#e4b73a;--shadow:0 4px 12px -4px rgba(0,0,0,.22);--lst:#e65100;--glass:#fff;
+  --f:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--cond:72%;--r:12px}
+[data-theme=dark]{--bg:#0f0f26;--panel:#17173a;--panel2:#1d1d45;--ink:#f1f0fb;--mut:#b0aed4;--line:#2e2d5c;--acc:#ff5c93;--acc-ink:#1a0d11;--acc2:#a9a4ff;--corr:#2a2952;--store:#24234c;--me:#5aa0ff;--sel:#4d2650;--vaga:#4d3f10;--dest:#2f2c4d;--halo:#14132e;--chip:#23234c;--gold-ink:#ffc233;--ok:#3ccf7a;--warn-bg:#33290c;--warn-line:#8a6a12;--shadow:0 8px 22px -8px rgba(0,0,0,.7);--lst:#ffa040;--glass:#17173a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.4;caret-color:var(--acc)}
 body{display:flex;flex-direction:column;overflow:hidden;height:100dvh}
+::selection{background:var(--acc);color:var(--acc-ink)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button{font:inherit;color:inherit;cursor:pointer}
-svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
-header{padding:10px 12px 10px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;flex:none;position:relative}
-header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e02020,#ff8a1e,var(--gold))}
+button:disabled{cursor:default}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.num,.dist,.ref b,.pvd,.tab,.mtr{font-variant-numeric:tabular-nums lining-nums}
+/* ---------- cabeçalho: faixa marinho com o nome em corpo de catálogo ---------- */
+header{padding:10px 12px;background:var(--navy2);color:#fff;flex:none;border-bottom:2px solid var(--gold)}
 .top{display:flex;align-items:center;gap:10px}
-.logo{width:42px;height:42px;border-radius:12px;background:#fff;padding:4px;object-fit:contain;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.logo{width:40px;height:40px;border-radius:10px;background:#fff;padding:4px;object-fit:contain;flex:none}
 .logo.fb{display:grid;place-items:center;background:var(--acc);color:#fff;font-weight:900;font-size:16px;padding:0}
 .ttl{flex:1;min-width:0}
-.ttl b{font-size:17px;line-height:1.1;display:block;font-weight:900;letter-spacing:.2px;text-transform:uppercase}
-.ttl b span{color:var(--gold);font-weight:700;text-transform:none;font-style:italic;margin-left:4px}
-.ttl small{display:block;font-size:12.5px;opacity:.82;line-height:1.3;margin-top:2px}
-.ibtn{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);color:#fff;flex:none;display:grid;place-items:center;padding:0}
-.ibtn.on{background:var(--me);border-color:var(--me)}
+.ttl b{display:block;font-size:20px;line-height:1;font-weight:850;font-stretch:var(--cond);text-transform:uppercase;letter-spacing:.01em}
+.ttl b span{color:var(--gold);margin-left:5px}
+.ttl small{display:block;font-size:12.5px;color:#d9d7f2;line-height:1.3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;flex:none;display:grid;place-items:center;padding:0;transition:background .15s,border-color .15s}
+.ibtn:hover{background:rgba(255,255,255,.1)}
+.ibtn.on{background:var(--gold);border-color:var(--gold);color:var(--navy2)}
 #inst{display:none}
 #th .sun{display:none}[data-theme=dark] #th .sun{display:block}[data-theme=dark] #th .moon{display:none}
-.search{position:relative}
-.search input{width:100%;height:48px;font:inherit;font-size:16px;font-weight:500;padding:0 44px 0 44px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);outline:none;-webkit-appearance:none}
-.search input::placeholder{color:var(--mut)}
-.search input:focus{border-color:var(--acc)}
-.search .si{position:absolute;left:13px;top:13px;color:var(--acc);pointer-events:none}
-#qx{position:absolute;right:5px;top:6px;width:36px;height:36px;border:0;background:none;font-size:17px;color:var(--mut);display:none}
-.sq{padding:6px 12px 8px;border-top:1px solid var(--line);flex:none;background:var(--panel)}
-.chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font-size:14px;font-weight:700;white-space:nowrap}
-.chip .gi{width:17px;height:17px}
-.chip.fac{background:var(--chip);border-color:transparent}
-.chip.on{background:var(--acc2);border-color:var(--acc2);color:#fff}.chip.on .gi{color:#fff!important}
-[data-theme=dark] .chip.on{background:var(--acc);color:#1a0d11}
-#sheet[data-v=store] .sq,#sheet[data-v=list] .sq,#sheet[data-v=me] .sq,#sheet[data-v=fac] .sq{display:none}
-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+/* ---------- abas de prédio · andar: sumário do catálogo ---------- */
+nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0 8px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
 nav::-webkit-scrollbar{display:none}
-.tab{flex:none;font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:999px;color:var(--mut);border:1px solid var(--line);cursor:pointer;white-space:nowrap;background:transparent}
-.tab.on{color:#fff;background:var(--navy);border-color:var(--navy)}
-[data-theme=dark] .tab.on{background:var(--acc);border-color:var(--acc);color:#14132e}
-.tab b{font-size:11px;background:var(--acc);color:#fff;border-radius:999px;padding:1px 6px;margin-left:6px}
-.tab.on b{background:#fff;color:var(--navy)}
-.sep{width:1px;background:var(--line);flex:none;margin:4px 2px}
-#mapwrap{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden;background:radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 0) 0 0/20px 20px,var(--bg)}
+.tab{flex:none;font-size:13.5px;font-weight:700;font-stretch:85%;padding:12px 10px 10px;color:var(--mut);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink);border-bottom-color:var(--acc)}
+.tab b{font-size:11px;background:var(--acc);color:var(--acc-ink);border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:800}
+.tab .lb{font-style:normal;font-size:11px;font-weight:800;background:var(--lst);color:#fff;border-radius:999px;padding:1px 6px;margin-left:6px}
+.sep{width:1px;background:var(--line);flex:none;margin:10px 6px}
+/* ---------- mapa ---------- */
+#mapwrap{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden;background:radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 0) 0 0/24px 24px,var(--bg)}
 svg#map{width:100%;height:100%;display:block;user-select:none}
-.fab{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:2px;padding:5px;border-radius:28px;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border:1px solid var(--line);box-shadow:var(--shadow)}
-.fab button{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--ink);font-size:21px;font-weight:800;display:grid;place-items:center;padding:0}
-.fab button:active{background:var(--chip)}
-.fab #navb{background:var(--acc2);color:#fff;margin-bottom:3px}
-.fab button.on:not(#navb){background:var(--chip);color:var(--acc2)}
-.fab .t3{font-size:14px;font-weight:900}
+.fab{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:14px;background:var(--panel);box-shadow:var(--shadow)}
+.fab button{width:44px;height:44px;border-radius:10px;border:0;background:transparent;color:var(--ink);font-size:14px;font-weight:800;display:grid;place-items:center;padding:0;transition:background .15s}
+.fab button:hover{background:var(--chip)}
+.fab #navb{background:var(--navy);color:#fff;margin-bottom:2px}
+[data-theme=dark] .fab #navb{background:var(--acc);color:var(--acc-ink)}
+.fab button.on:not(#navb){background:var(--chip);color:var(--acc)}
+.fab .t3{font-stretch:var(--cond);font-size:15px;font-weight:900;letter-spacing:.02em}
 .fab .rot{display:none!important}
 .fabl{position:absolute;left:10px;bottom:10px}
-.fabl button{height:48px;padding:0 16px;border-radius:24px;border:1px solid var(--line);background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);font-size:14px;font-weight:800;box-shadow:var(--shadow)}
-.fabl button.on{background:var(--me);color:#fff;border-color:var(--me)}
-#locb{position:absolute;left:10px;top:8px;max-width:calc(100% - 76px);display:none;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1.5px solid var(--me);color:var(--ink);font-size:14px;font-weight:800;box-shadow:var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
-#locb i{width:10px;height:10px;border-radius:50%;background:var(--me);box-shadow:0 0 0 4px rgba(26,115,232,.28);flex:none}
-.hint{position:absolute;left:50%;top:54px;transform:translateX(-50%);background:var(--navy2);color:#fff;font-size:13.5px;font-weight:500;padding:10px 14px;border-radius:12px;display:none;max-width:88%;text-align:center;z-index:3;box-shadow:var(--shadow)}
-#sheet{background:var(--panel);border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,18,70,.18);display:flex;flex-direction:column;flex:none;transition:height .22s;overflow:hidden;border-top:1px solid var(--line)}
-#sheet.peek{height:auto}#sheet.peek .body{display:none}#sheet.mid{height:42vh}#sheet.full{height:86vh}
-#sheet.cm{height:auto}#sheet.cm .grab{padding:16px 14px 2px}#sheet.cm .body{overflow:visible;flex:none;padding-bottom:12px}
-.grab{padding:18px 14px 10px;display:flex;align-items:center;gap:10px;cursor:grab;touch-action:none;position:relative;flex:none}
-.grab:before{content:"";width:40px;height:5px;border-radius:5px;background:var(--line);position:absolute;left:50%;top:6px;transform:translateX(-50%)}
-.grab .t{font-size:16px;font-weight:900;flex:1;min-width:0;line-height:1.25;overflow-wrap:anywhere}
-.grab .m{font-size:12.5px;color:var(--mut);text-align:right;flex:none;max-width:45%}
-.body{overflow:auto;padding:0 14px 18px;flex:1;-webkit-overflow-scrolling:touch}
-h3{font-size:12.5px;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.cat{border:1px solid var(--line);border-radius:16px;padding:10px 4px 9px;text-align:center;background:var(--panel);color:var(--ink)}
-.cat .e{width:46px;height:46px;border-radius:50%;margin:0 auto 5px;display:grid;place-items:center;font-size:25px;line-height:1}
-.cat b{font-size:13px;display:block;line-height:1.2;overflow-wrap:anywhere;font-weight:700}.cat small{color:var(--mut);font-size:11.5px}
-.item{display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
-.ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;flex:none}
+.fabl button{height:44px;padding:0 14px 0 11px;border-radius:12px;border:0;background:var(--panel);color:var(--ink);font-size:14px;font-weight:750;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:7px}
+.fabl button .i{width:19px;height:19px;color:var(--acc)}
+.fabl button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}.fabl button.on .i{color:inherit}
+#locb{position:absolute;left:10px;top:10px;max-width:calc(100% - 20px);display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:10px;background:var(--panel);color:var(--ink);font-size:13.5px;font-weight:700;box-shadow:var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2;cursor:pointer}
+#locb i{width:10px;height:10px;border-radius:50%;background:var(--me);box-shadow:0 0 0 3px color-mix(in srgb,var(--me) 30%,transparent);flex:none}
+.hint{position:absolute;left:50%;top:56px;transform:translateX(-50%);background:var(--navy2);color:#fff;font-size:14px;font-weight:600;padding:10px 14px;border-radius:10px;display:none;max-width:88%;text-align:center;z-index:3;box-shadow:var(--shadow);border-bottom:2px solid var(--gold)}
+/* ---------- gaveta: página do catálogo ---------- */
+#sheet{background:var(--panel);border-radius:16px 16px 0 0;box-shadow:0 -6px 16px -10px rgba(0,0,0,.3);display:flex;flex-direction:column;flex:none;overflow:hidden;border-top:1px solid var(--line)}
+#sheet.peek{height:auto}#sheet.peek .body{display:none}#sheet.mid{height:44vh}#sheet.full{height:86vh}
+#sheet.cm{height:auto}#sheet.cm .grab{padding:16px 16px 2px}#sheet.cm .body{overflow:visible;flex:none;padding-bottom:14px}
+.grab{padding:18px 16px 10px;display:flex;align-items:baseline;gap:10px;cursor:grab;touch-action:none;position:relative;flex:none}
+.grab:before{content:"";width:36px;height:4px;border-radius:4px;background:var(--line);position:absolute;left:50%;top:7px;transform:translateX(-50%)}
+.grab .t{font-size:19px;font-weight:850;font-stretch:var(--cond);flex:1;min-width:0;line-height:1.15;overflow-wrap:anywhere;letter-spacing:.005em}
+.grab .m{font-size:12.5px;color:var(--mut);text-align:right;flex:none;max-width:48%;font-weight:600}
+.body{overflow:auto;padding:0 16px 18px;flex:1;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+h3{font-size:16px;margin:20px 0 6px;color:var(--ink);font-weight:850;font-stretch:var(--cond);letter-spacing:.005em}
+/* busca e filtros */
+.sq{padding:2px 16px 10px;border-top:1px solid var(--line);flex:none;background:var(--panel)}
+.search{position:relative;margin-top:10px}
+.search input{width:100%;height:46px;font:inherit;font-size:16px;font-weight:550;padding:0 44px;border-radius:var(--r);border:2px solid transparent;background:var(--panel);color:var(--ink);outline:none;-webkit-appearance:none;transition:border-color .15s,background .15s}
+.search input::placeholder{color:var(--mut)}
+.search input:focus{border-color:var(--gold)}
+.search input::-webkit-search-cancel-button{display:none}
+.search .si{position:absolute;left:13px;top:13px;color:var(--mut);pointer-events:none}
+.search input:focus~.si,.search:focus-within .si{color:var(--acc)}
+#qx{position:absolute;right:6px;top:6px;width:36px;height:36px;border:0;background:none;color:var(--mut);display:none;place-items:center;border-radius:8px}
+#qx .i{width:18px;height:18px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0 0;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:13.5px;font-weight:700;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.chip:hover{border-color:var(--mut)}
+.chip .i{width:17px;height:17px;color:var(--acc2)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--panel)}.chip.on .i{color:inherit}
+#sheet[data-v=store] .sq,#sheet[data-v=list] .sq,#sheet[data-v=me] .sq,#sheet[data-v=fac] .sq{display:none}
+/* amostra de cor do segmento (cartela) */
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,#999);flex:none;vertical-align:0}
+/* REF: corredor + número do box, como a referência de uma peça */
+.ref{flex:none;width:64px;display:flex;align-items:center;line-height:1}
+.ref b{font-size:18px;font-weight:850;font-stretch:var(--cond);color:var(--gold-ink);letter-spacing:.01em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref.lg{width:auto;max-width:42%;padding-right:14px;margin-right:2px;border-right:1px solid var(--line);align-self:stretch}
+.ref.lg b{font-size:28px}
+/* índice de lojas */
+.item{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+.item:hover{background:color-mix(in srgb,var(--chip) 60%,transparent)}
 .item .mid{flex:1;min-width:0}
-.item .n{font-weight:700;font-size:15px;line-height:1.25;overflow-wrap:anywhere}
-.item .l{font-size:13px;color:var(--mut);line-height:1.35;margin-top:2px;overflow-wrap:anywhere}
-.rt{display:flex;align-items:center;gap:8px;flex:none}
-.dist{font-size:13px;font-weight:700;color:var(--acc2);white-space:nowrap}
-.add{width:40px;height:40px;border-radius:50%;border:2px solid var(--acc);background:transparent;color:var(--acc);font-size:20px;font-weight:700;line-height:1;padding:0}
-.add.in{background:var(--acc);color:#fff}
-.star{color:#f0a500}
-.card h2{font-size:21px;margin:2px 0 3px;line-height:1.2;font-weight:900;overflow-wrap:anywhere}
-.loc{font-size:14px;color:var(--mut);font-weight:500;line-height:1.4}
-.dsum{display:inline-flex;gap:6px;align-items:center;background:var(--chip);color:var(--acc2);font-weight:700;font-size:13.5px;padding:6px 12px;border-radius:999px;margin:8px 0 2px}
-.promo{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--vaga);border:1px solid #e4b73a;font-size:14px;font-weight:500;line-height:1.4;color:var(--ink)}
-.desc{font-size:14px;line-height:1.5;margin:6px 0}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.tag{font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--chip)}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.btn{font-size:14.5px;font-weight:700;padding:0 14px;min-height:46px;border-radius:12px;border:1px solid var(--line);background:var(--panel);text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center;line-height:1.2}
-.btn.b{background:var(--navy);border-color:var(--navy);color:#fff;flex:1 1 150px}
-[data-theme=dark] .btn.b{background:var(--me);border-color:var(--me)}
-.btn.g{background:var(--acc);border-color:var(--acc);color:#fff;flex:1 1 150px}
-.btn.g.in{background:transparent;color:var(--acc)}
-.btn.w{background:#1faa59;border-color:#1faa59;color:#fff}
-.btn.sm{min-height:40px;font-size:13.5px;padding:6px 12px}
-.stepsbox{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-top:8px}
-ol.steps{margin:5px 0 0;padding-left:20px;font-size:14.5px;line-height:1.5}ol.steps li{margin:6px 0}
-.note{font-size:13px;color:var(--mut);line-height:1.5;margin-top:10px}.note a{color:var(--acc);font-weight:700}
-.warn{font-size:13.5px;background:var(--vaga);border:1px solid #e4b73a;border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.45}
-.empty{font-size:14.5px;color:var(--mut);padding:14px 0;line-height:1.55}
-.intro{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:6px}
-.intro ol{margin:6px 0 10px;padding-left:20px;font-size:14.5px;line-height:1.55}
-.stop{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.num{width:32px;height:32px;border-radius:50%;background:var(--acc);color:#fff;font-weight:900;display:grid;place-items:center;flex:none;font-size:14px}
-.stop .mid{flex:1;min-width:0;cursor:pointer}
-.stop .n{font-weight:700;font-size:15px;line-height:1.25;overflow-wrap:anywhere}.stop .l{font-size:13px;color:var(--mut);line-height:1.35}
-.mini{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-size:14px;padding:0;color:var(--ink)}.mini:disabled{opacity:.35}
-details.sp{margin:2px 0 4px 42px}details.sp summary{font-size:13.5px;font-weight:700;color:var(--acc);cursor:pointer;padding:4px 0}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);flex:none}
-#bar button{flex:1;border:0;background:none;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--mut);position:relative}
-#bar button.on{color:var(--acc)}
-#bar button.on:before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--acc)}
-#bd{position:absolute;top:3px;left:calc(50% + 6px);background:var(--acc);color:#fff;border-radius:999px;font-size:11px;padding:1px 6px;display:none}
-.gi{width:1em;height:1em;vertical-align:-.14em;flex:none}
-.ico .gi{width:26px;height:26px;vertical-align:0}.cat .e .gi{width:26px;height:26px;vertical-align:0}.tag .gi{width:15px;height:15px;vertical-align:-3px;margin-right:2px}.n .gi{width:16px;height:16px;vertical-align:-3px}
- .pv{touch-action:none}
+.item .n{font-weight:750;font-size:15.5px;line-height:1.25;overflow-wrap:anywhere}
+.item .l{font-size:13px;color:var(--mut);line-height:1.35;margin-top:3px;overflow-wrap:anywhere;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rt{display:flex;align-items:center;gap:10px;flex:none}
+.dist{font-size:14px;font-weight:750;color:var(--ink);white-space:nowrap;font-stretch:85%}
+.add{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--acc);display:grid;place-items:center;padding:0;transition:background .15s,border-color .15s,color .15s}
+.add:hover{border-color:var(--acc)}
+.add .i{width:20px;height:20px}
+.add.in{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.star{color:var(--gold-ink)}.star .i{width:.95em;height:.95em;vertical-align:-.08em;fill:currentColor;stroke-width:1.4}
+.flag{font-size:11.5px;font-weight:800;padding:1px 6px;border-radius:4px;background:var(--warn-bg);color:var(--gold-ink)}
+/* cartela de segmentos (início) */
+.cart{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+.cart button{display:flex;align-items:center;gap:10px;padding:11px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;font-size:14.5px;font-weight:700;color:var(--ink);transition:color .15s}
+.cart button:hover{color:var(--acc)}
+.cart .sw{width:14px;height:14px}
+.cart .c{margin-left:auto;font-size:12.5px;color:var(--mut);font-weight:650;font-variant-numeric:tabular-nums}
+/* ficha da loja */
+.pv{touch-action:none}
 .pv1{display:flex;gap:12px;align-items:center}
-.pv1 .ico{width:54px;height:54px;font-size:28px}
-.pvm{flex:1;min-width:0}.pvm h2{font-size:20px;margin:0;line-height:1.2;font-weight:900;overflow-wrap:anywhere}
-.pvbox{margin-top:4px;font-size:14.5px;color:var(--mut);font-weight:500;line-height:1.35}
-.boxn{display:inline-block;background:var(--acc2);color:#fff;font-weight:900;font-size:14.5px;padding:2px 9px;border-radius:8px;margin-right:6px}
-[data-theme=dark] .boxn{background:var(--acc);color:#1a0d11}
-.pvx{width:40px;height:40px;border-radius:50%;border:0;background:var(--chip);color:var(--ink);font-size:16px;flex:none;align-self:flex-start}
-.pv2{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}
-.bdg{padding:4px 10px;border-radius:999px;font-size:13px;font-weight:800;color:#fff}
-.bdg.open{background:#0b7a3b}.bdg.soon{background:#b45309}.bdg.shut{background:#8a1f1f}
-.seg{font-size:13.5px;font-weight:700;color:var(--ink);background:var(--chip);border-radius:999px;padding:4px 10px}
-.pvd{font-size:13.5px;font-weight:800;color:var(--acc2)}
-.pv3{display:flex;gap:8px;margin-top:12px}
-.pv3 .btn{min-height:52px;font-size:16px;border-radius:14px}
-.pv3 .pri{flex:1.35;background:var(--acc2);border-color:var(--acc2);color:#fff;font-weight:900}
-[data-theme=dark] .pv3 .pri{background:var(--me);border-color:var(--me)}
-.pv3 .sec{flex:1;white-space:nowrap;font-size:15px;padding:0 8px;background:var(--panel);border:2px solid var(--acc2);color:var(--acc2)}
-.pv3 .sec.in{background:var(--chip)}
-[data-theme=dark] .pv3 .sec{border-color:var(--me);color:var(--me)}
-.pvmore{display:block;margin:10px auto 0;border:0;background:none;color:var(--mut);font-size:13px;font-weight:700;padding:4px 10px}
-.tab .lb{font-style:normal;font-size:11px;font-weight:900;background:var(--lst);color:#fff;border-radius:999px;padding:1px 6px;margin-left:6px}
+.pvm{flex:1;min-width:0}.pvm h2,.card h2{font-size:24px;margin:0;line-height:1.08;font-weight:850;font-stretch:var(--cond);overflow-wrap:anywhere;letter-spacing:.005em}
+.pvbox,.loc{margin-top:5px;font-size:14px;color:var(--mut);font-weight:550;line-height:1.35}
+.pvx{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);display:grid;place-items:center;flex:none;align-self:flex-start;padding:0}
+.pvx .i{width:18px;height:18px}
+.pv2{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0 2px;font-size:13.5px}
+.segs{display:inline-flex;gap:10px;flex-wrap:wrap;color:var(--ink);font-weight:650}
+.segs span{display:inline-flex;align-items:center;gap:5px}
+.pvd{display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--ink)}.pvd .i{width:17px;height:17px;color:var(--acc)}
+.bdg{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800}
+.bdg:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.bdg.open{color:var(--ok)}.bdg.soon{color:#b45309}.bdg.shut{color:#b4232b}
+.pv3{display:flex;gap:8px;margin-top:14px}
+.pv3 .btn{min-height:50px;font-size:15.5px}
+.pv3 .pri{flex:1.4}.pv3 .sec{flex:1;white-space:nowrap}
+.pvmore{display:flex;align-items:center;gap:4px;margin:10px auto 0;border:0;background:none;color:var(--mut);font-size:13.5px;font-weight:700;padding:6px 10px;border-radius:8px}
+.pvmore:hover{color:var(--ink)}
+.pvmore .i{width:16px;height:16px}
+/* botões: um vocabulário só */
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.btn{font-size:14.5px;font-weight:750;padding:0 14px;min-height:46px;border-radius:var(--r);border:1px solid var(--line);background:var(--panel);text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:7px;text-align:center;line-height:1.2;transition:background .15s,border-color .15s,color .15s,transform .12s}
+.btn:hover{border-color:var(--mut)}
+.btn:active{transform:scale(.98)}
+.btn .i{width:18px;height:18px}
+.btn.g,.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);flex:1 1 150px}
+.btn.g:hover,.btn.pri:hover{filter:brightness(1.06)}
+.btn.b{background:var(--navy);border-color:var(--navy);color:#fff;flex:1 1 150px}
+[data-theme=dark] .btn.b{background:var(--acc2);border-color:var(--acc2);color:#0f0f26}
+.btn.g.in,.btn.sec.in{background:var(--chip);border-color:var(--chip);color:var(--ink)}
+.btn.sec{border:1.5px solid var(--ink);color:var(--ink);background:transparent}
+.btn.w{background:#1faa59;border-color:#1faa59;color:#fff}
+.btn.sm{min-height:40px;font-size:13.5px;padding:6px 12px;border-radius:10px}
+.dsum{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;margin:12px 0 2px}
+.dsum .i{width:19px;height:19px;color:var(--acc)}
+.promo,.warn{margin:10px 0;padding:10px 12px;border-radius:10px;background:var(--warn-bg);border:1px solid var(--warn-line);font-size:14px;font-weight:550;line-height:1.45;color:var(--ink);display:flex;gap:9px;align-items:flex-start}
+.promo .i,.warn .i{width:18px;height:18px;color:var(--gold-ink);margin-top:1px}
+.desc{font-size:14.5px;line-height:1.55;margin:8px 0;max-width:65ch}
+.tags{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;font-size:13.5px;font-weight:700}
+.tag{display:inline-flex;align-items:center;gap:6px}
+/* passo a passo: o comprimento da barra é a distância do trecho */
+.stepsbox{margin-top:12px;border-top:1px solid var(--line);padding-top:4px}
+.stepsbox>b{display:block;font-size:16px;font-weight:850;font-stretch:var(--cond);margin:10px 0 2px}
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:p}
+ol.steps li{counter-increment:p;display:grid;grid-template-columns:26px 1fr;column-gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.45}
+ol.steps li:last-child{border-bottom:0}
+ol.steps li:before{content:counter(p);font-weight:850;font-stretch:var(--cond);font-size:15px;color:var(--mut);font-variant-numeric:tabular-nums;line-height:1.45}
+ol.steps .mtr{grid-column:2;display:block;height:4px;margin-top:7px;border-radius:2px;background:var(--chip);overflow:hidden}
+ol.steps .mtr i{display:block;height:100%;width:var(--w);background:var(--acc2);border-radius:2px}
+[data-theme=dark] ol.steps .mtr i{background:var(--acc2)}
+.note{font-size:13px;color:var(--mut);line-height:1.5;margin-top:12px}.note a{color:var(--acc);font-weight:750;text-underline-offset:3px}
+.empty{font-size:14.5px;color:var(--mut);padding:14px 0;line-height:1.55}
+.empty b{color:var(--ink)}
+.intro{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:4px;background:var(--panel2)}
+.intro b{font-weight:850;font-stretch:var(--cond);font-size:16px}
+.intro ol{margin:6px 0 10px;padding-left:20px;font-size:14.5px;line-height:1.55}
+/* minha lista */
+.stop{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.num{width:30px;height:30px;border-radius:8px;background:var(--acc);color:var(--acc-ink);font-weight:850;display:grid;place-items:center;flex:none;font-size:15px;font-stretch:var(--cond)}
+.stop .mid{flex:1;min-width:0;cursor:pointer}
+.stop .n{font-weight:750;font-size:15px;line-height:1.25;overflow-wrap:anywhere}.stop .l{font-size:13px;color:var(--mut);line-height:1.35;margin-top:2px}
+.mini{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);padding:0;color:var(--ink);display:grid;place-items:center}.mini:disabled{opacity:.35}
+.mini .i{width:16px;height:16px}
+details.sp{margin:0 0 4px 40px}details.sp summary{font-size:13.5px;font-weight:750;color:var(--acc);cursor:pointer;padding:6px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gpsrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.gpsrow .mid{flex:1;min-width:0}.gpsrow .n{font-weight:750}.gpsrow .l{font-size:13px;color:var(--mut)}
+/* barra inferior */
+footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);flex:none}
+#bar button{flex:1;border:0;background:none;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--mut);position:relative;transition:color .15s}
+#bar button:hover{color:var(--ink)}
+#bar button.on{color:var(--acc)}
+#bar button.on:before{content:"";position:absolute;top:-1px;left:28%;right:28%;height:3px;background:var(--acc)}
+#bd{position:absolute;top:4px;left:calc(50% + 7px);background:var(--acc);color:var(--acc-ink);border-radius:999px;font-size:11px;font-weight:800;padding:1px 6px;display:none}
+.gi{width:1em;height:1em;vertical-align:-.14em;flex:none}
+/* ---------- mapa: marcadores, legenda de catálogo e níveis de zoom ---------- */
 .pin{transform:scale(var(--ps,1))}
 .tint{opacity:.07}
 .clu{display:none}#map.zf .clu{display:block}
-.mk .cm,.mk .pl{opacity:0;visibility:hidden;transition:opacity .28s,visibility .28s}
+.mk .cm,.mk .pl{opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 #map.zm .mk .cm{opacity:1;visibility:visible}
 #map.zn2 .mk .pl{opacity:1;visibility:visible}
 #map.zn2 .mk.co .pl{opacity:0;visibility:hidden}
 #map.zn2 .mk.co .cm{opacity:1;visibility:visible}
 #map .mk.hid .cm,#map .mk.hid .pl{opacity:0!important;visibility:hidden!important}
+#map.zn2 .mk.sel .pl{opacity:0;visibility:hidden}#map.zn2 .mk.sel .cm{opacity:1;visibility:visible}
 #map.zm g .zi,#map.zn2 g .zi,#map.zn2 g .zl,#map.zn2 g .zn{display:none}
 #map .mk .pin,#map .clu .pin{transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .18s}
 #map .mk .pin{transform-origin:0 0}
 #map.zn2 .mk .pin{transform:scale(var(--pls,1))}
-#map g[data-id]:hover .mk .pin,#map .mk.sel .pin{filter:drop-shadow(0 0 7px rgba(255,190,60,.95))}
+#map g[data-id]:hover .mk .pin,#map .mk.sel .pin{filter:drop-shadow(0 2px 4px rgba(22,22,63,.45))}
 #map.zm g[data-id]:hover .mk .pin{transform:scale(calc(var(--ps,1)*1.12))}
 #map.zn2 g[data-id]:hover .mk .pin{transform:scale(calc(var(--pls,1)*1.08))}
 #map g[data-id]:active .mk .pin{transform:scale(calc(var(--ps,1)*1.2))}
-#map.zn2 .stip{display:none}
+#map.zn2 .stip,#map .legenda~* .stip{display:none}
+#map .stip{display:none}
 #map.zf .m3{display:none}
 #map.zn2.v3 g .zl,#map.zn2.v3 g .zn{display:inline}
 #map .mk text,#map .mk .stip text{stroke:none}
@@ -176,23 +226,40 @@ footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line)
 #map.zf g:not(.anc) .zi{display:none}
 #map.zf g.anc .zl{display:inline}
 #map g[data-id] text,#map text.zc{paint-order:stroke;stroke:var(--halo);stroke-width:2px;stroke-linejoin:round}
-[data-hc]{--ink:#000;--mut:#33252a;--line:#7d6a6f;--bg:#fff;--panel:#fff;--corr:#cdbab5;--store:#fff;--acc:#b3003f;--acc2:#16163f;--chip:#ece0dc;--halo:#fff;--glass:rgba(255,255,255,.96)}
-[data-hc][data-theme=dark]{--ink:#fff;--mut:#e8d8dc;--line:#b49aa1;--bg:#000;--panel:#120a0d;--corr:#4d3a40;--store:#1d1216;--halo:#000;--glass:rgba(10,5,7,.96)}
+#map .legenda{pointer-events:none;font-family:var(--f)}
+#map .legenda .lgs{transform:scale(var(--lgs,1))}
+#map .legenda .ln{stroke:var(--ink);stroke-width:1.2;fill:none;vector-effect:non-scaling-stroke}
+#map .legenda .pt{fill:var(--acc);stroke:var(--halo);stroke-width:2;vector-effect:non-scaling-stroke}
+#map .legenda .rf{fill:var(--gold-ink);font-weight:850;font-stretch:72%;letter-spacing:.02em}
+#map .legenda .nm{fill:var(--ink);font-weight:850;font-stretch:72%}
+#map .legenda .lc{fill:var(--mut);font-weight:650}
+#map .legenda text{paint-order:stroke;stroke:var(--halo);stroke-width:4px;stroke-linejoin:round}
+#map .legenda{animation:legenda .26s cubic-bezier(.2,.8,.2,1) both}
+@keyframes legenda{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+#map.zf .legenda{display:none}
+/* alto contraste (sol forte) */
+[data-hc]{--ink:#000;--mut:#33252a;--line:#7d6a6f;--bg:#fff;--panel:#fff;--panel2:#fff;--corr:#cdbab5;--store:#fff;--acc:#b3003f;--acc2:#16163f;--chip:#ece0dc;--halo:#fff;--glass:#fff;--gold-ink:#5c3d00}
+[data-hc][data-theme=dark]{--ink:#fff;--mut:#e8d8dc;--line:#b49aa1;--bg:#000;--panel:#120a0d;--panel2:#120a0d;--corr:#4d3a40;--store:#1d1216;--halo:#000;--glass:#120a0d;--gold-ink:#ffd25e}
 [data-hc] #map g[data-id]>rect:first-child{stroke-width:2.2px!important;stroke:var(--ink)}
-[data-hc] body,[data-hc] .item .l,[data-hc] .loc,[data-hc] .pvbox{font-weight:600}
+[data-hc] body,[data-hc] .item .l,[data-hc] .loc,[data-hc] .pvbox{font-weight:650}
 [data-hc] #map text{font-weight:900!important;stroke-width:3px}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card,.intro,.grid .cat,.item{animation:rise .28s cubic-bezier(.2,.8,.2,1) both}
-.item,.cat,.btn,.tab,.add{transition:transform .12s,box-shadow .15s,background .15s}
-.item:active,.cat:active,.btn:active{transform:scale(.98)}
-.cat:hover{box-shadow:var(--shadow)}
-.item{border-radius:12px;padding-left:4px;padding-right:4px}
-.ico{box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
-@media(prefers-reduced-motion:reduce){.card,.intro,.grid .cat,.item{animation:none}}
 @keyframes dash{to{stroke-dashoffset:-24}}
 @keyframes pulse{0%{r:9;opacity:.55}100%{r:30;opacity:0}}
 @keyframes pulse3{0%{opacity:.4}100%{opacity:0}}
 .route{animation:dash .8s linear infinite}.pulse{animation:pulse 1.6s ease-out infinite}.pulse3{animation:pulse3 1.6s ease-out infinite}
+@media(prefers-reduced-motion:reduce){.route,.pulse,.pulse3,#map .legenda{animation:none}}
+@media(min-width:900px){
+  body{display:grid;grid-template-columns:420px 1fr;grid-template-rows:auto auto 1fr auto}
+  header{grid-column:1/-1;display:grid;grid-template-columns:1fr minmax(320px,560px);align-items:center;column-gap:24px}
+  header .top{grid-column:1/-1;grid-row:1}
+  header .search{margin-top:0;grid-row:1;grid-column:2;margin-right:184px}
+  nav{grid-column:1/-1}
+  #mapwrap{grid-column:2;grid-row:3/5}
+  #sheet,#sheet.mid,#sheet.full,#sheet.peek,#sheet.cm{grid-column:1;grid-row:3;height:auto;border-radius:0;box-shadow:none;border-top:0;border-right:1px solid var(--line);min-height:0}
+  #sheet.peek .body{display:block}#sheet.cm .body{overflow:auto;flex:1}
+  .grab{cursor:default}.grab:before{display:none}
+  footer#bar{grid-column:1;grid-row:4;border-right:1px solid var(--line)}
+}
 </style>
 </head>
 <body>
@@ -205,26 +272,26 @@ footer#bar{display:flex;background:var(--panel);border-top:1px solid var(--line)
     <button class="ibtn" id="hc" aria-label="Alto contraste (sol forte)" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor"/></svg></button>
     <button class="ibtn" id="gps" aria-label="Usar o GPS"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
   </div>
+    <div class="search" id="searchbox"><input id="q" type="search" placeholder="Loja, produto ou número do box" autocomplete="off" enterkeyhint="search" aria-label="Buscar loja, produto ou número do box"><svg class="i si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><button id="qx" aria-label="Limpar busca"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 </header>
 <nav id="tabs" aria-label="Prédio e andar"></nav>
 <div id="mapwrap">
   <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
-  <div class="fabl"><button id="mark">📍 Marcar onde estou</button></div>
+  <div class="fabl"><button id="mark"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>Marcar onde estou</button></div>
   <div class="fab">
-    <button id="navb" class="on" aria-label="Navegar até a loja (mapa que gira com o celular ou câmera)">🧭</button>
+    <button id="navb" class="on" aria-label="Navegar até a loja (mapa que gira com o celular ou câmera)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
     <button id="v3" class="t3" aria-label="Alternar entre mapa 2D e 3D">3D</button>
     <button id="rl" class="rot" aria-label="Girar para a esquerda">⟲</button>
     <button id="rr" class="rot" aria-label="Girar para a direita">⟳</button>
-    <button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button><button id="zfit" aria-label="Ver tudo" style="font-size:15px">⤢</button>
+    <button id="zin" aria-label="Aproximar"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button id="zout" aria-label="Afastar"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><button id="zfit" aria-label="Ver o andar inteiro"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div id="locb" role="status"></div>
-  <div class="hint" id="hint"></div>
+  <div class="hint" id="hint" role="status" aria-live="polite"></div>
 </div>
 <section id="sheet" class="mid">
   <div class="grab" id="grab"><span class="t" id="st">Buscar</span><span class="m" id="sm"></span></div>
   <div class="body" id="sb"></div>
   <div class="sq">
-    <div class="search" id="searchbox"><svg class="i si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Buscar loja ou produto…" autocomplete="off" enterkeyhint="search"><button id="qx" aria-label="Limpar busca">✕</button></div>
     <div class="chips" id="chips"></div>
   </div>
 </section>
@@ -261,6 +328,28 @@ const mTxt = m => m==null||!isFinite(m)?"":`~${Math.max(5,Math.round(m/5)*5)} m`
 const minTxt = m => `${Math.max(1,Math.round(m/70))} min a pé`;
 const tint = s => (SEGCOLOR[s.prim]||"#999")+"22";
 const locTxt = s => `${BUILD[s.b].short} · ${FLOORS[s.f].split(" ·")[0]} · ${esc(s.cor)}${s.num?` · ${esc(s.num)}`:""}`;
+/* ---------- vocabulário do catálogo: ícones desenhados, REF, cartela e passos medidos ---------- */
+const ICONS={plus:"M12 5v14M5 12h14",check:"M5 12.5l4.5 4.5L19 7",x:"M6 6l12 12M18 6L6 18",search:"M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4",
+  pin:"M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z",
+  walk:"M13.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM10 21l2-6 2.5 2.5V21M12 15l1-5.5-3 1.5-1.5 3M13 9.5l2.5 2.5 2.5 1",
+  compass:"M12 21a9 9 0 100-18 9 9 0 000 18zM15.5 8.5l-2 5-5 2 2-5z",
+  route:"M6 20a2 2 0 100-4 2 2 0 000 4zM18 8a2 2 0 100-4 2 2 0 000 4zM6 16V10a3 3 0 013-3h3M18 8v6a3 3 0 01-3 3h-3",
+  tag:"M3 12V4h8l10 10-8 8zM7.5 8.5h.01",key:"M15 13a4 4 0 100-8 4 4 0 000 8zM12.2 11.8L4 20M7 17l2.5 2.5",
+  alert:"M12 4l9 16H3zM12 10v4M12 17h.01",share:"M4 12v7h16v-7M12 3v12M7 8l5-5 5 5",ext:"M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
+  up:"M6 15l6-6 6 6",down:"M6 9l6 6 6-6",back:"M15 6l-6 6 6 6",bolt:"M13 3L5 14h6l-1 7 8-11h-6z",
+  trash:"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",map:"M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14",
+  gps:"M12 19a7 7 0 100-14 7 7 0 000 14zM12 14a2 2 0 100-4 2 2 0 000 4zM12 2v3M12 19v3M2 12h3M19 12h3",
+  wc:"M7 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM17 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM5.5 21v-6H4l1.5-7h3L10 15H8.5v6M15 21V8h4v7h-1v6M12 3v18",
+  star:"M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9z",caixa:"M3 7h18v10H3zM12 14.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM6.5 10v4M17.5 10v4",estac:"M5 3h14v18H5zM10 17V7h3a3 3 0 010 6h-3"};
+const ic = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[k]||ICONS.pin}"/></svg>`;
+/* REF = número do box (o primeiro, quando a loja ocupa vários); sem número, o andar */
+const refOf = s => MM.refOf(s);
+const refHTML = (s,lg) => `<span class="ref${lg?" lg":""}" aria-label="Referência ${esc(refOf(s))}, ${esc(s.cor)}${s.num?", box "+esc(s.num):""}"><b>${esc(refOf(s))}</b></span>`;
+const segLine = s => `<span style="display:inline-flex;gap:5px;align-items:center"><i class="sw" style="--c:${SEGCOLOR[s.prim]||"#999"}"></i>${esc(s.prim)}</span>`;
+function stepsHTML(steps){
+  const ms=steps.map(t=>{ const m=/~(\d+)\s*m\b/.exec(String(t).replace(/<[^>]+>/g,"")); return m?+m[1]:0; }), mx=Math.max(1,...ms);
+  return `<ol class="steps">${steps.map((t,i)=>`<li><span>${t}</span>${ms[i]?`<span class="mtr" aria-hidden="true"><i style="--w:${Math.max(4,Math.round(ms[i]/mx*100))}%"></i></span>`:""}</li>`).join("")}</ol>`;
+}
 let dcache = {S:null,key:"",map:null};
 function allDist(){
   const r=curRef(), key=r.g+"|"+Math.round(r.x)+"|"+Math.round(r.y);
@@ -291,7 +380,7 @@ function lod(vb){
   const ck=c+(st.v3?" v3":"");
   if(ck!==lodC){ lodC=ck; m.setAttribute("class",ck); }
   m.style.setProperty("--ps",Math.max(1,Math.min(2.8,.8/ppu)).toFixed(2));
-  m.style.setProperty("--pls",Math.max(.3,Math.min(1.2,.85/ppu)).toFixed(2));
+  m.style.setProperty("--pls",Math.max(.3,Math.min(1.2,.85/ppu)).toFixed(2)); m.style.setProperty("--lgs",(1/ppu).toFixed(3));
   clearTimeout(lod.t); lod.t=setTimeout(declutter,320);
 }
 /* anti-colisão: nada se sobrepõe. Prioridade: selecionada, lista, destaque, resto. Tenta a pílula; se bater, vira só o ícone; se ainda bater, some até aproximar mais */
@@ -303,7 +392,9 @@ function declutter(){
     const out=r=>r.right<box.left||r.left>box.right||r.bottom<box.top||r.top>box.bottom; if(out(c)&&out(p)) return;
     items.push({mk,c,p,pr:!s?9:(st.sel===s.id?0:st.list.includes(s.s)?1:s.dest?2:s.vaga?3:4)}); });
   items.sort((a,b)=>a.pr-b.pr||a.c.top-b.c.top||a.c.left-b.c.left);
-  const placed=[], hit=a=>placed.some(b=>!(a.right+3<b.left||a.left-3>b.right||a.bottom+2<b.top||a.top-2>b.bottom));
+  /* a legenda de catálogo vem primeiro: nenhum rótulo cobre a loja escolhida */
+  const placed=[], lgd=m.querySelector(".legenda .lgs"); if(lgd) placed.push(lgd.getBoundingClientRect());
+  const hit=a=>placed.some(b=>!(a.right+3<b.left||a.left-3>b.right||a.bottom+2<b.top||a.top-2>b.bottom));
   for(const it of items){
     if(near&&!hit(it.p)){ placed.push(it.p); continue; }
     it.mk.classList.add("co");
@@ -320,8 +411,10 @@ const pz = MM.panZoom($("map"), $("mapwrap"), {
     if (el) selectStore(+el.getAttribute("data-id"), false);
   }
 });
-function centerOn(x,y,w){ const p = st.v3 ? V().P(x,y,0) : {x,y}; pz.center(p.x,p.y,w); }
-function fit(){ const g=G[st.g]; if(g) pz.fit(st.v3 ? V().bounds : MM.bounds(g), g.plan ? Infinity : undefined); } /* planta desenhada: mostra o desenho inteiro */
+function centerOn(x,y,w){ const p = st.v3 ? V().P(x,y,0) : {x,y}; pz.center(p.x,p.y,w); relod(); }
+/* depois de mover o mapa por código, recalcula o nível de zoom e o anti-colisão dos rótulos */
+function relod(){ try{ lod(pz.vb()); }catch(e){} }
+function fit(){ const g=G[st.g]; if(g) pz.fit(st.v3 ? V().bounds : MM.bounds(g), g.plan ? Infinity : undefined); relod(); } /* planta desenhada: mostra o desenho inteiro */
 function draw(){
   const g=G[st.g]; if(!g) return;
   let paths=null, badges=[]; const s = st.sel!=null ? STORES[st.sel] : null;
@@ -345,7 +438,7 @@ function fitRoute(){
   if(!pts.length||!g) return fit();
   let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity; pts.forEach(p=>{ x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); });
   const pad=50, w=Math.max(160,x1-x0+pad*2), h=Math.max(120,y1-y0+pad*2);
-  pz.fit({x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h},Infinity);
+  pz.fit({x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h},Infinity); relod();
 }
 $("zin").onclick=()=>pz.zoom(1.4); $("zout").onclick=()=>pz.zoom(1/1.4); $("zfit").onclick=fit;
 function setV3(on){
@@ -362,7 +455,7 @@ $("rl").onclick=()=>rotate(-30); $("rr").onclick=()=>rotate(30);
 
 /* ---------- posição ---------- */
 const saveMe = () => lsSet("mm_me",st.me);
-function markAt(p){ const g=G[st.g], q=MM.nearest(g,p); st.me={g:st.g,x:q.x,y:q.y,how:"mapa"}; saveMe(); setMarking(false); refresh(); centerOn(q.x,q.y); toast("📍 Posição marcada. Distâncias atualizadas.",2200); if(navigator.vibrate) try{ navigator.vibrate(30); }catch(e){} }
+function markAt(p){ const g=G[st.g], q=MM.nearest(g,p); st.me={g:st.g,x:q.x,y:q.y,how:"mapa"}; saveMe(); setMarking(false); refresh(); centerOn(q.x,q.y); toast("Posição marcada. Distâncias atualizadas.",2200); if(navigator.vibrate) try{ navigator.vibrate(30); }catch(e){} }
 function renderLoc(){
   const b=$("locb"), m=fromPos();
   if(!m){ b.style.display="none"; return; }
@@ -370,14 +463,14 @@ function renderLoc(){
   b.innerHTML=`<i></i>Você está no ${esc(fl)}${lane?" · "+esc(lane):""}`; b.style.display="flex";
 }
 $("locb").onclick=()=>{ const m=fromPos(); if(!m) return; if(m.g!==st.g) showGroup(m.g,false); centerOn(m.x,m.y,360); };
-function meAtStore(id){ const s=STORES[id]; st.me={g:s.g,x:s.door.x,y:s.door.y,how:"loja"}; saveMe(); refresh(); centerOn(s.door.x,s.door.y); toast("📍 Posição marcada em "+s.n,2500); }
-function setMarking(on){ st.marking=on; $("mark").classList.toggle("on",on); $("mark").textContent=on?"✕ Cancelar":"📍 Marcar onde estou"; if(on){ setSheet("peek"); toast("Toque no corredor onde você está"); } else $("hint").style.display="none"; }
+function meAtStore(id){ const s=STORES[id]; st.me={g:s.g,x:s.door.x,y:s.door.y,how:"loja"}; saveMe(); refresh(); centerOn(s.door.x,s.door.y); toast("Posição marcada em "+s.n,2500); }
+function setMarking(on){ st.marking=on; $("mark").classList.toggle("on",on); $("mark").innerHTML=on?ic("x")+"Cancelar":ic("pin")+"Marcar onde estou"; if(on){ setSheet("peek"); toast("Toque no corredor onde você está"); } else $("hint").style.display="none"; }
 $("mark").onclick=()=>setMarking(!st.marking);
 function applyHash(){
   const h=location.hash.slice(1); if(!h.startsWith("qr-")) return;
   const r=MM.resolveQR(h,G); if(!r) return;
   st.me={g:r.g,x:r.x,y:r.y,how:"qr"}; saveMe(); showGroup(r.g,false); centerOn(r.x,r.y,380); refresh();
-  toast("📍 Você está em: "+r.label,4000); MM.track("qr",{ponto:h});
+  toast("Você está em: "+r.label,4000); MM.track("qr",{ponto:h});
 }
 window.addEventListener("hashchange",applyHash);
 
@@ -423,7 +516,7 @@ function renderTabs(){
     const g=G[k]; if (last && last!==g.b) h+=`<span class="sep"></span>`;
     const n = filtering() ? g.stores.filter(match).length : 0;
     const ln=g.stores.filter(x=>st.list.includes(x.s)).length;
-    h+=`<span class="tab ${st.g===k?"on":""}" data-g="${k}">${BUILD[g.b].short} · ${FLOORS[g.f].split(" ·")[0]}${n?`<b>${n}</b>`:""}${ln?`<i class="lb" title="na sua lista">★${ln}</i>`:""}</span>`; last=g.b;
+    h+=`<span class="tab ${st.g===k?"on":""}" data-g="${k}">${BUILD[g.b].short} · ${FLOORS[g.f].split(" ·")[0]}${n?`<b>${n}</b>`:""}${ln?`<i class="lb" title="na sua lista">${ln}</i>`:""}</span>`; last=g.b;
   }
   $("tabs").innerHTML=h;
   const on=$("tabs").querySelector(".tab.on"); if(on&&on.scrollIntoView) on.scrollIntoView({inline:"center",block:"nearest"});
@@ -434,8 +527,8 @@ function renderFilter(){
   $("qx").style.display=st.q?"block":"none";
   const c={}; STORES.forEach(x=>x.cats.forEach(k=>c[k]=(c[k]||0)+1));
   const first=["Alimentação"], rest=SEGS.map(a=>a[0]).filter(k=>c[k]&&!first.includes(k));
-  const fac=k=>`<button class="chip fac ${st.view==="fac"&&st.fac&&st.fac.t===k?"on":""}" data-fac="${k}"><span aria-hidden="true">${MM.MT[k][0]}</span>${FAC.find(a=>a[0]===k)[1]}</button>`;
-  const seg=k=>`<button class="chip ${st.seg===k?"on":""}" data-cat="${esc(k)}">${MM.icoHTML(k,st.seg===k?"#fff":undefined)}${esc(k)}</button>`;
+  const fac=k=>`<button class="chip fac ${st.view==="fac"&&st.fac&&st.fac.t===k?"on":""}" data-fac="${k}">${ic(k)}${FAC.find(a=>a[0]===k)[1]}</button>`;
+  const seg=k=>`<button class="chip ${st.seg===k?"on":""}" data-cat="${esc(k)}"><i class="sw" style="--c:${SEGCOLOR[k]||"#999"}"></i>${esc(k)}</button>`;
   $("chips").innerHTML=fac("wc")+(c["Alimentação"]?seg("Alimentação"):"")+fac("caixa")+fac("estac")+rest.map(seg).join("");
 }
 $("chips").onclick=e=>{
@@ -448,7 +541,7 @@ $("qx").onclick=()=>{ $("q").value=""; st.q=""; st.sel=null; st.view=filtering()
 function goFac(t){
   const list=[]; for(const k in (MM.MARCOS||{})) if(G[k]) (MM.MARCOS[k]||[]).forEach(m=>{ if(m.t===t) list.push({k,m}); });
   const nm=MM.MT[t][1];
-  if(!list.length){ toast(`${MM.MT[t][0]} ${nm}: ainda não marcado neste mapa. O administrador marca no painel.`,3800); return; }
+  if(!list.length){ toast(`${nm}: ainda não marcado neste mapa. O administrador marca no painel.`,3800); return; }
   let best=null;
   list.forEach(({k,m})=>{ const g=G[k], ps={id:-1,g:k,b:g.b,f:g.f,n:nm,cor:"",door:{x:m.x,y:m.y}}; const lg=MM.leg(G,fromPos(),ps,"De onde você está,"); if(!best||lg.m<best.lg.m) best={t,g:k,x:m.x,y:m.y,lg,ps}; });
   st.fac=best; st.sel=null; st.view="fac"; st.seg=null; $("q").value=""; st.q="";
@@ -457,11 +550,11 @@ function goFac(t){
 }
 function closeFac(){ st.fac=null; st.view=filtering()?"results":"home"; refresh(); }
 function viewFac(){
-  const f=st.fac, g=G[f.g], nm=MM.MT[f.t][1];
+  const f=st.fac, g=G[f.g], nm=MM.MT[f.t][1], lane=MM.laneAt(g,f);
   $("st").textContent=""; $("sm").innerHTML="";
-  $("sb").innerHTML=`<div class="card pv"><div class="pv1"><span class="ico" style="background:var(--chip)">${MM.MT[f.t][0]}</span><div class="pvm"><h2>${nm} mais perto</h2><div class="pvbox">${esc(BUILD[g.b].short)} · ${esc(FLOORS[g.f].split(" ·")[0])}${MM.laneAt(g,f)?" · "+esc(MM.laneAt(g,f)):""}</div></div><button class="pvx" id="facx" aria-label="Fechar">✕</button></div>
-    <div class="pv2"><span class="pvd">🚶 ${mTxt(f.lg.m)} · ${minTxt(f.lg.m)}</span></div>
-    <div class="stepsbox"><ol class="steps">${f.lg.steps.map(t=>`<li>${t}</li>`).join("")}</ol></div>${f.lg.warn?`<div class="warn">⚠️ ${f.lg.warn}</div>`:""}</div>`;
+  $("sb").innerHTML=`<div class="card pv"><div class="pv1"><span class="ref lg" aria-hidden="true"><small>${esc(FLOORS[g.f].split(" ·")[0])}</small><b style="color:var(--acc2)">${ic(f.t)}</b></span><div class="pvm"><h2>${nm} mais perto</h2><div class="pvbox">${esc(BUILD[g.b].short)} · ${esc(FLOORS[g.f].split(" ·")[0])}${lane?" · "+esc(lane):""}</div></div><button class="pvx" id="facx" aria-label="Fechar">${ic("x")}</button></div>
+    <div class="dsum">${ic("walk")}${mTxt(f.lg.m)} · ${minTxt(f.lg.m)}</div>
+    <div class="stepsbox">${stepsHTML(f.lg.steps)}</div>${f.lg.warn?`<div class="warn">${ic("alert")}<span>${f.lg.warn}</span></div>`:""}</div>`;
   $("facx").onclick=closeFac;
 }
 
@@ -469,7 +562,8 @@ function viewFac(){
 function showGroup(k,doFit){ st.g=k; renderTabs(); draw(); if(doFit) fit(); const g=G[k]; $("sub").textContent=`${BUILD[g.b].name} · ${FLOORS[g.f]}`; }
 function selectStore(id,center,notrack){
   const s=STORES[id]; if(st.view!=="store") st.back=st.view;
-  st.sel=id; st.view="store"; st.card=true; st.fac=null;
+  st.sel=id; st.view="store"; st.fac=null;
+  st.card=!matchMedia("(min-width:900px)").matches; /* no computador o painel lateral já abre com o passo a passo */
   if (st.g!==s.g) showGroup(s.g,false);
   if (st.sheet==="peek"||st.sheet==="full") setSheet("mid"); else markBar();
   draw(); renderSheet(); if(center!==false) centerOn(s.door.x,s.door.y,340); if(!notrack) MM.track("loja",{loja:s.s});
@@ -477,7 +571,7 @@ function selectStore(id,center,notrack){
 function backFromStore(){ st.sel=null; st.card=false; st.view=st.back==="store"?"home":st.back; if(st.view==="home"&&filtering()) st.view="results"; refresh(); }
 function toggleList(id){
   const s=STORES[id], i=st.list.indexOf(s.s);
-  if (i>=0){ st.list.splice(i,1); toast("Removida da lista",1500); } else { st.list.push(s.s); toast(`✓ Adicionada à lista (${st.list.length}). Veja em “Minha lista”.`,2200); }
+  if (i>=0){ st.list.splice(i,1); toast("Removida da lista",1500); } else { st.list.push(s.s); toast(`Adicionada à lista (${st.list.length}). Veja em “Minha lista”.`,2200); }
   st.okey=""; lsSet("mm_list",st.list); ensureOrder(); markBar();
   const sc=$("sb").scrollTop; draw(); renderSheet(); $("sb").scrollTop=sc;
 }
@@ -506,7 +600,7 @@ function openCam(s, fromList){
 $("navb").onclick=()=>{
   if(st.sel!=null&&STORES[st.sel]) return openCam(STORES[st.sel],false);
   if(st.list.length){ const o=ensureOrder(); if(o.length) return openCam(o[0],true); }
-  toast("🧭 Escolha uma loja (ou monte a lista) e toque aqui para navegar com a bússola do celular.",3400);
+  toast("Escolha uma loja (ou monte a lista) e toque aqui para navegar com a bússola do celular.",3400);
 };
 
 /* ---------- telas do painel ---------- */
@@ -515,7 +609,7 @@ const storeURL = s => location.origin+location.pathname+"?loja="+encodeURICompon
 async function shareStore(s){
   const url=storeURL(s), data={title:s.n+" · Mega Moda",text:`${s.n} — ${locTxt(s).replace(/<[^>]+>/g,"")}`,url};
   try{ if(navigator.share){ await navigator.share(data); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
-  try{ await navigator.clipboard.writeText(url); toast("🔗 Link copiado! Cole no WhatsApp ou Instagram.",2500); }
+  try{ await navigator.clipboard.writeText(url); toast("Link copiado. Cole no WhatsApp ou no Instagram.",2500); }
   catch(e){ prompt("Copie o link da loja:",url); }
 }
 const gmaps = a => "https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(a);
@@ -523,9 +617,9 @@ const wa = n => { let d=String(n).replace(/\D/g,""); if(d.length<=11) d="55"+d; 
 const ig = v => /^https?:/.test(v) ? v : "https://www.instagram.com/"+String(v).replace(/^@/,"")+"/";
 function itemHTML(s,d){
   const inl=st.list.includes(s.s);
-  return `<div class="item" data-id="${s.id}"><span class="ico" style="background:${tint(s)}">${MM.icoHTML(s.ik)}</span>
-    <div class="mid"><div class="n">${s.dest?'<span class="star">★</span> ':""}${esc(s.n)}</div><div class="l">${locTxt(s)}${s.vaga?" · 🔑 para alugar":""}${s.promo?" · 🏷️ promoção":""}</div></div>
-    <div class="rt"><span class="dist">${mTxt(d)}</span><button class="add ${inl?"in":""}" data-add="${s.id}" aria-label="${inl?"Remover da lista":"Adicionar à lista"}">${inl?"✓":"＋"}</button></div></div>`;
+  return `<div class="item" data-id="${s.id}">${refHTML(s)}
+    <div class="mid"><div class="n">${s.dest?'<span class="star" role="img" aria-label="destaque">${ic("star")}</span> ':""}${esc(s.n)}</div><div class="l">${segLine(s)}<span>${esc(FLOORS[s.f].split(" ·")[0])} · ${esc(s.cor)}</span>${s.vaga?'<span class="flag">para alugar</span>':""}${s.promo?'<span class="flag">promoção</span>':""}</div></div>
+    <div class="rt"><span class="dist">${mTxt(d)}</span><button class="add ${inl?"in":""}" data-add="${s.id}" aria-label="${inl?"Remover da lista":"Adicionar à lista"}">${ic(inl?"check":"plus")}</button></div></div>`;
 }
 function foot(){
   const g=G[st.g];
@@ -535,60 +629,59 @@ function viewHome(){
   $("st").textContent="O que você procura?"; $("sm").textContent=`${STORES.length} lojas`;
   const c={}; STORES.forEach(s=>s.cats.forEach(x=>c[x]=(c[x]||0)+1));
   const D=allDist(), near=STORES.filter(s=>s.cats.some(x=>x!=="Serviços")).sort((a,b)=>D.get(a.id)-D.get(b.id)).slice(0,5);
-  const intro = lsGet("mm_intro",false) ? "" : `<div class="intro"><b>Como usar</b><ol><li>Escolha o que procura (ou digite na busca).</li><li>Toque em <b>＋</b> para juntar várias lojas na <b>Minha lista</b>.</li><li>Siga a linha azul no mapa — ou use a <b>câmera</b>.</li></ol><button class="btn sm" id="introok">Entendi</button></div>`;
-  $("sb").innerHTML = intro + `<h3>Escolha um tipo de loja</h3><div class="grid">${SEGS.filter(([x])=>c[x]).map(([x])=>`<button class="cat" data-cat="${esc(x)}"><div class="e" style="background:${MM.SEGCOLOR[x]}2b">${MM.icoHTML(x)}</div><b>${esc(x)}</b><small>${c[x]} lojas</small></button>`).join("")}</div>`
-    + `<h3>Mais perto de ${fromPos()?"você":"entrada deste piso"}</h3>${near.map(s=>itemHTML(s,D.get(s.id))).join("")}`
-    + (fromPos()?"":`<div class="warn">📍 Marque onde você está (botão no mapa ou aba “Onde estou”) para a lista mostrar o que está realmente perto de você.</div>`) + foot();
+  const intro = lsGet("mm_intro",false) ? "" : `<div class="intro"><b>Como usar</b><ol><li>Busque pelo nome, por um produto ou pelo número do box.</li><li>Toque em <b>+</b> para juntar várias lojas na <b>Minha lista</b>.</li><li>Siga a linha no mapa, ou use a câmera.</li></ol><button class="btn sm" id="introok">Entendi</button></div>`;
+  $("sb").innerHTML = intro + `<h3>Tipos de loja</h3><div class="cart">${SEGS.filter(([x])=>c[x]).map(([x])=>`<button data-cat="${esc(x)}"><i class="sw" style="--c:${MM.SEGCOLOR[x]}"></i>${esc(x)}<span class="c">${c[x]}</span></button>`).join("")}</div>`
+    + `<h3>Mais perto ${fromPos()?"de você":"da entrada deste piso"}</h3>${near.map(s=>itemHTML(s,D.get(s.id))).join("")}`
+    + (fromPos()?"":`<div class="warn">${ic("pin")}<span>Marque onde você está (botão no mapa ou aba “Onde estou”) para a lista mostrar o que está realmente perto de você.</span></div>`) + foot();
   const ok=$("introok"); if(ok) ok.onclick=()=>{ lsSet("mm_intro",true); renderSheet(); };
 }
 function viewResults(){
   const D=allDist(), all=STORES.filter(match).sort((a,b)=>(D.get(a.id)-(a.dest?25:0))-(D.get(b.id)-(b.dest?25:0)));
   const here=all.filter(s=>s.g===st.g).length;
   $("st").textContent=`${all.length} loja${all.length!==1?"s":""} encontrada${all.length!==1?"s":""}`; $("sm").textContent=`${here} neste andar`;
-  if(!all.length){ $("sb").innerHTML=`<div class="empty">Nada encontrado. Tente outro nome, um produto (biquíni, jeans, tênis…) ou o número da loja.<br><br><button class="btn sm" id="clr">Limpar busca</button></div>`+foot(); $("clr").onclick=()=>{ $("q").value=""; st.q=""; st.seg=null; st.view="home"; refresh(true); }; return; }
-  $("sb").innerHTML=(match.fuzzy?`<div class="promo" style="margin:0 0 6px">🔎 Não achamos exatamente “${esc(st.q.trim())}”. Mostrando resultados parecidos.</div>`:"")+`<div class="note" style="margin:0 0 4px">Ordenadas da mais perto à mais longe, a partir da ${refLabel()}.</div>`
+  if(!all.length){ $("sb").innerHTML=`<div class="empty"><b>Nenhuma loja com esse nome.</b><br>Tente outro nome, um produto (biquíni, jeans, tênis…) ou o número do box.<br><br><button class="btn sm" id="clr">Limpar busca</button></div>`+foot(); $("clr").onclick=()=>{ $("q").value=""; st.q=""; st.seg=null; st.view="home"; refresh(true); }; return; }
+  $("sb").innerHTML=(match.fuzzy?`<div class="promo">${ic("search")}<span>Não achamos exatamente “${esc(st.q.trim())}”. Mostrando resultados parecidos.</span></div>`:"")+`<div class="note" style="margin:0 0 4px">Da mais perto à mais longe, a partir da ${refLabel()}.</div>`
     + all.slice(0,st.more).map(s=>itemHTML(s,D.get(s.id))).join("")
-    + (all.length>st.more?`<button class="btn" id="more" style="width:100%;margin-top:10px">Ver mais ${Math.min(60,all.length-st.more)} lojas</button>`:"") + foot();
+    + (all.length>st.more?`<button class="btn" id="more" style="width:100%;margin-top:12px">Ver mais ${Math.min(60,all.length-st.more)} lojas</button>`:"") + foot();
   const m=$("more"); if(m) m.onclick=()=>{ st.more+=60; const sc=$("sb").scrollTop; renderSheet(); $("sb").scrollTop=sc; };
 }
 function badgeHTML(){
   const o=MM.openState(); if(!o) return "";
-  return `<span class="bdg ${o.open?(o.soon?"soon":"open"):"shut"}">${o.open?"● ":""}${esc(o.txt)}</span>`;
+  return `<span class="bdg ${o.open?(o.soon?"soon":"open"):"shut"}">${esc(o.txt)}</span>`;
 }
 function viewCard(){
-  const s=STORES[st.sel], B=BUILD[s.b], lg=MM.leg(G,fromPos(),s,""), inl=st.list.includes(s.s);
+  const s=STORES[st.sel], lg=MM.leg(G,fromPos(),s,""), inl=st.list.includes(s.s);
   $("st").textContent=""; $("sm").innerHTML="";
-  $("sb").innerHTML=`<div class="card pv"><div class="pv1"><span class="ico" style="background:${tint(s)}">${MM.icoHTML(s.ik)}</span>
-    <div class="pvm"><h2>${s.dest?'<span class="star">★</span> ':""}${esc(s.n)}</h2><div class="pvbox">${s.num?`<span class="boxn">Box ${esc(s.num)}</span>`:""}${esc(s.cor)} · ${esc(FLOORS[s.f].split(" ·")[0])}</div></div><button class="pvx" id="pvx" aria-label="Fechar">✕</button></div>
-    <div class="pv2">${badgeHTML()}<span class="seg">${s.cats.map(esc).join(" • ")}</span><span class="pvd">🚶 ${mTxt(lg.m)}</span></div>
-    ${s.promo?`<div class="promo" style="margin:8px 0 0">🏷️ ${esc(s.promo)}</div>`:""}
-    <div class="pv3"><button class="btn pri" id="pvgo">➜ Traçar Rota</button><button class="btn sec ${inl?"in":""}" id="pvsave"><svg class="i" viewBox="0 0 24 24" ${inl?'style="fill:currentColor"':""}><path d="M6 3h12v18l-6-4-6 4z"/></svg>${inl?"Na lista":"Salvar na Lista"}</button></div>
-    <button class="pvmore" id="pvmore">Ver detalhes e passo a passo ▴</button></div>`;
+  $("sb").innerHTML=`<div class="card pv"><div class="pv1">${refHTML(s,true)}
+    <div class="pvm"><h2>${s.dest?'<span class="star" role="img" aria-label="destaque">${ic("star")}</span> ':""}${esc(s.n)}</h2><div class="pvbox">${esc(BUILD[s.b].short)} · ${esc(FLOORS[s.f].split(" ·")[0])} · ${esc(s.cor)}</div></div><button class="pvx" id="pvx" aria-label="Fechar">${ic("x")}</button></div>
+    <div class="pv2">${badgeHTML()}<span class="segs">${s.cats.map(c=>`<span><i class="sw" style="--c:${SEGCOLOR[c]||"#999"}"></i>${esc(c)}</span>`).join("")}</span><span class="pvd">${ic("walk")}${mTxt(lg.m)}</span></div>
+    ${s.promo?`<div class="promo">${ic("tag")}<span>${esc(s.promo)}</span></div>`:""}
+    <div class="pv3"><button class="btn pri" id="pvgo">${ic("route")}Traçar rota</button><button class="btn sec ${inl?"in":""}" id="pvsave">${ic(inl?"check":"plus")}${inl?"Na lista":"Na minha lista"}</button></div>
+    <button class="pvmore" id="pvmore">Detalhes e passo a passo ${ic("up")}</button></div>`;
   $("pvx").onclick=backFromStore;
   $("pvgo").onclick=()=>{ st.card=false; renderSheet(); draw(); fitRoute(); };
   $("pvsave").onclick=()=>toggleList(s.id);
   $("pvmore").onclick=()=>{ st.card=false; renderSheet(); draw(); fitRoute(); };
-  void B;
 }
 function viewStore(){
   const s=STORES[st.sel], B=BUILD[s.b], lg=MM.leg(G,fromPos(),s,"De onde você está,"), inl=st.list.includes(s.s);
-  $("st").textContent="Como chegar · "+s.n; $("sm").innerHTML=`<button class="btn sm" id="back" style="height:34px">← Voltar</button>`;
-  $("sb").innerHTML=`<div class="card"><div class="row" style="gap:10px;flex-wrap:nowrap;align-items:flex-start"><span class="ico" style="background:${tint(s)};width:52px;height:52px;font-size:28px">${MM.icoHTML(s.ik)}</span><div><h2>${s.dest?'<span class="star">★</span> ':""}${esc(s.n)}</h2>
-    <div class="loc">${esc(B.name)} · ${FLOORS[s.f]} · ${esc(s.cor)}${s.num?` · Loja ${esc(s.num)}`:""}</div></div></div>
-    <div class="dsum">🚶 ${mTxt(lg.m)} · ${minTxt(lg.m)}</div>
-    <div class="btns"><button class="btn b" id="camb">🧭 Navegar até a loja</button><button class="btn g ${inl?"in":""}" id="addb">${inl?"✓ Na minha lista":"＋ Adicionar à minha lista"}</button></div>
-    <div class="stepsbox"><b>Passo a passo</b><ol class="steps">${lg.steps.map(t=>`<li>${t}</li>`).join("")}</ol></div>
-    ${lg.warn?`<div class="warn">⚠️ ${lg.warn}</div>`:""}
-    ${s.vaga?`<div class="promo" style="background:#fff1c2">🔑 <b>Box disponível para locação.</b>${s.locacao?" "+esc(s.locacao):""}${leaseLink(s)?`<br><a class="btn sm w" style="margin-top:8px" id="lease" href="${leaseLink(s)}" target="_blank" rel="noopener">Tenho interesse ↗</a>`:""}</div>`:""}
-    ${s.promo?`<div class="promo">🏷️ ${esc(s.promo)}</div>`:""}${s.desc?`<div class="desc">${esc(s.desc)}</div>`:""}
-    <div class="tags">${s.cats.map(c=>`<span class="tag" style="border-left:3px solid ${SEGCOLOR[c]||"#999"}">${MM.icoHTML(c)} ${esc(c)}</span>`).join("")}</div>
+  $("st").textContent="Como chegar"; $("sm").innerHTML=`<button class="btn sm" id="back">${ic("back")}Voltar</button>`;
+  $("sb").innerHTML=`<div class="card"><div class="pv1">${refHTML(s,true)}<div class="pvm"><h2>${s.dest?'<span class="star" role="img" aria-label="destaque">${ic("star")}</span> ':""}${esc(s.n)}</h2>
+    <div class="loc">${esc(B.name)} · ${FLOORS[s.f]} · ${esc(s.cor)}${s.num?` · Box ${esc(s.num)}`:""}</div></div></div>
+    <div class="dsum">${ic("walk")}${mTxt(lg.m)} · ${minTxt(lg.m)}</div>
+    <div class="btns"><button class="btn b" id="camb">${ic("compass")}Navegar</button><button class="btn g ${inl?"in":""}" id="addb">${ic(inl?"check":"plus")}${inl?"Na lista":"Adicionar à lista"}</button></div>
+    <div class="stepsbox"><b>Passo a passo</b>${stepsHTML(lg.steps)}</div>
+    ${lg.warn?`<div class="warn">${ic("alert")}<span>${lg.warn}</span></div>`:""}
+    ${s.vaga?`<div class="promo">${ic("key")}<span><b>Box disponível para locação.</b>${s.locacao?" "+esc(s.locacao):""}${leaseLink(s)?`<br><a class="btn sm w" style="margin-top:8px" id="lease" href="${leaseLink(s)}" target="_blank" rel="noopener">Tenho interesse ${ic("ext")}</a>`:""}</span></div>`:""}
+    ${s.promo?`<div class="promo">${ic("tag")}<span>${esc(s.promo)}</span></div>`:""}${s.desc?`<div class="desc">${esc(s.desc)}</div>`:""}
+    <div class="tags">${s.cats.map(c=>`<span class="tag"><i class="sw" style="--c:${SEGCOLOR[c]||"#999"}"></i>${esc(c)}</span>`).join("")}</div>
     <div class="btns">
-      <button class="btn sm" id="share">🔗 Compartilhar</button>
-      <button class="btn sm" id="here">📍 Estou nesta loja</button>
-      ${s.whats?`<a class="btn sm w" id="wa" href="${wa(s.whats)}" target="_blank" rel="noopener">WhatsApp ↗</a>`:""}
-      ${s.insta?`<a class="btn sm" href="${esc(ig(s.insta))}" target="_blank" rel="noopener">Instagram ↗</a>`:""}
-      <a class="btn sm" href="https://www.megamoda.com.br/produto/${encodeURIComponent(s.s)}/" target="_blank" rel="noopener">Ver no site ↗</a>
-      <a class="btn sm" href="${gmaps(B.name+", "+B.addr)}" target="_blank" rel="noopener">Chegar ao prédio ↗</a></div>
+      <button class="btn sm" id="share">${ic("share")}Compartilhar</button>
+      <button class="btn sm" id="here">${ic("pin")}Estou nesta loja</button>
+      ${s.whats?`<a class="btn sm w" id="wa" href="${wa(s.whats)}" target="_blank" rel="noopener">WhatsApp ${ic("ext")}</a>`:""}
+      ${s.insta?`<a class="btn sm" href="${esc(ig(s.insta))}" target="_blank" rel="noopener">Instagram ${ic("ext")}</a>`:""}
+      ${s.b==="real"?"":`<a class="btn sm" href="https://www.megamoda.com.br/produto/${encodeURIComponent(s.s)}/" target="_blank" rel="noopener">Ver no site ${ic("ext")}</a>`}
+      ${B.addr?`<a class="btn sm" href="${gmaps(B.name+", "+B.addr)}" target="_blank" rel="noopener">Chegar ao prédio ${ic("ext")}</a>`:""}</div>
     <div class="note">Endereço oficial: ${esc(s.loc)}</div></div>`;
   $("sb").scrollTop=0;
   $("camb").onclick=()=>openCam(s,false);
@@ -602,39 +695,39 @@ function viewStore(){
 function viewList(){
   const order=ensureOrder(), n=order.length;
   $("st").textContent=`Minha lista${n?` (${n})`:""}`; $("sm").textContent=n?"ordenada por andar e corredor":"";
-  if(!n){ $("sb").innerHTML=`<div class="empty"><b>Sua lista está vazia.</b><br>Toque em <b>＋</b> nas lojas que quer visitar. O app mostra a ordem mais curta, começando pela mais perto de você, e desenha o caminho de uma loja até a outra.<br><br><button class="btn g" id="go">🔎 Escolher lojas</button></div>`; $("go").onclick=()=>{ st.view=filtering()?"results":"home"; refresh(); }; return; }
+  if(!n){ $("sb").innerHTML=`<div class="empty"><b>Sua lista está vazia.</b><br>Toque em <b>+</b> nas lojas que quer visitar. O app mostra a ordem mais curta, começando pela mais perto de você, e desenha o caminho de uma loja até a outra.<br><br><button class="btn g" id="go">${ic("search")}Escolher lojas</button></div>`; $("go").onclick=()=>{ st.view=filtering()?"results":"home"; refresh(); }; return; }
   const legs=planList(), total=legs.reduce((a,l)=>a+l.m,0);
-  $("sb").innerHTML=`<div class="dsum">🚶 Total ${mTxt(total)} · ${minTxt(total)}</div>
+  $("sb").innerHTML=`<div class="dsum">${ic("walk")}Total ${mTxt(total)} · ${minTxt(total)}</div>
     <div class="note" style="margin:2px 0 4px">Ordem a partir da ${refLabel()}.${st.manual?" Você mudou a ordem.":""}</div>
-    <div class="btns" style="margin:6px 0"><button class="btn b" id="lcam">🧭 Navegar pela lista</button><button class="btn sm" id="lopt">⚡ Otimizar rota</button><button class="btn sm" id="lclr">🗑 Limpar</button></div>`
-    + order.map((s,i)=>`<div class="stop"><span class="num">${i+1}</span><div class="mid" data-id="${s.id}"><div class="n">${MM.icoHTML(s.ik)} ${esc(s.n)}</div><div class="l">${locTxt(s)} · ${mTxt(legs[i].m)}${i?" da anterior":""}</div></div>
-        <button class="mini" data-mv="${i}|-1" aria-label="Subir" ${i?"":"disabled"}>▲</button><button class="mini" data-mv="${i}|1" aria-label="Descer" ${i<n-1?"":"disabled"}>▼</button><button class="mini" data-rm="${s.id}" aria-label="Remover">✕</button></div>
-        <details class="sp"><summary>Como chegar</summary><ol class="steps">${legs[i].steps.map(t=>`<li>${t}</li>`).join("")}</ol></details>`).join("")
-    + (legs[0]&&legs[0].warn?`<div class="warn">⚠️ ${legs[0].warn}</div>`:"") + `<div class="btns"><button class="btn sm" id="lfit">🗺️ Ver no mapa</button></div>`;
+    <div class="btns"><button class="btn b" id="lcam">${ic("compass")}Navegar pela lista</button><button class="btn sm" id="lopt">${ic("bolt")}Otimizar rota</button><button class="btn sm" id="lclr">${ic("trash")}Limpar</button></div>`
+    + order.map((s,i)=>`<div class="stop"><span class="num">${i+1}</span><div class="mid" data-id="${s.id}"><div class="n">${esc(s.n)}</div><div class="l">${s.num?`Box ${esc(s.num)} · `:""}${esc(FLOORS[s.f].split(" ·")[0])} · ${esc(s.cor)} · <span class="mtr">${mTxt(legs[i].m)}</span>${i?" da anterior":""}</div></div>
+        <button class="mini" data-mv="${i}|-1" aria-label="Subir" ${i?"":"disabled"}>${ic("up")}</button><button class="mini" data-mv="${i}|1" aria-label="Descer" ${i<n-1?"":"disabled"}>${ic("down")}</button><button class="mini" data-rm="${s.id}" aria-label="Remover">${ic("x")}</button></div>
+        <details class="sp"><summary>Como chegar</summary>${stepsHTML(legs[i].steps)}</details>`).join("")
+    + (legs[0]&&legs[0].warn?`<div class="warn">${ic("alert")}<span>${legs[0].warn}</span></div>`:"") + `<div class="btns"><button class="btn sm" id="lfit">${ic("map")}Ver no mapa</button></div>`;
   $("lcam").onclick=()=>openCam(order[0],true);
-  $("lopt").onclick=()=>{ st.manual=false; lsSet("mm_manual",false); st.okey=""; refresh(); toast("⚡ Rota otimizada por andar e corredor",2200); };
+  $("lopt").onclick=()=>{ st.manual=false; lsSet("mm_manual",false); st.okey=""; refresh(); toast("Rota otimizada por andar e corredor",2200); };
   $("lclr").onclick=()=>{ st.list=[]; st.manual=false; lsSet("mm_list",[]); lsSet("mm_manual",false); st.okey=""; refresh(); };
   $("lfit").onclick=()=>{ setSheet("peek"); const f=order.find(s=>s.g===st.g)||order[0]; if(f.g!==st.g) showGroup(f.g,false); fit(); };
 }
 function viewMe(){
   const m=fromPos(); $("st").textContent="Onde estou"; $("sm").textContent=m?"posição marcada":"";
   const where = m ? `${BUILD[G[m.g].b].name} · ${FLOORS[G[m.g].f]}` : "";
-  $("sb").innerHTML=`<div class="card">${m?`<div class="dsum">📍 ${esc(where)}</div><div class="note" style="margin-top:2px">Marcada ${{mapa:"no mapa",qr:"por QR Code",loja:"em uma loja",cam:"pela câmera",entrada:"na entrada"}[m.how]||""}. As rotas e as distâncias saem daqui.</div>`
-      :`<div class="warn">Você ainda não marcou onde está. Sem isso, as rotas e as distâncias partem da entrada do andar.</div>`}
+  $("sb").innerHTML=`<div class="card">${m?`<div class="dsum">${ic("pin")}${esc(where)}</div><div class="note" style="margin-top:2px">Marcada ${{mapa:"no mapa",qr:"por QR Code",loja:"em uma loja",cam:"pela câmera",entrada:"na entrada"}[m.how]||""}. As rotas e as distâncias saem daqui.</div>`
+      :`<div class="warn">${ic("pin")}<span>Você ainda não marcou onde está. Sem isso, as rotas e as distâncias partem da entrada do andar.</span></div>`}
     <h3>Como dizer ao app onde você está</h3>
     <div class="btns" style="flex-direction:column;align-items:stretch">
-      <button class="btn g" id="mk">📍 Marcar no mapa</button>
-      <div class="note" style="margin:0 0 6px"><b>QR Code:</b> aponte a câmera do celular para a etiqueta fixada no corredor — o app abre já com a sua posição.</div>
-      <button class="btn" id="gpsb">📡 ${st.gps?"Atualizar GPS":"Usar o GPS para achar o prédio"}</button>
+      <button class="btn g" id="mk">${ic("pin")}Marcar no mapa</button>
+      <div class="note" style="margin:0 0 6px"><b>QR Code:</b> aponte a câmera do celular para a etiqueta fixada no corredor. O app abre já com a sua posição.</div>
+      <button class="btn" id="gpsb">${ic("gps")}${st.gps?"Atualizar GPS":"Usar o GPS para achar o prédio"}</button>
       ${m?`<button class="btn sm" id="mclr">Limpar minha posição</button>`:""}
-    </div>${st.gpsMsg?`<div class="warn">${esc(st.gpsMsg)}</div>`:""}${st.gps?gpsInfo():""}</div>${foot()}`;
+    </div>${st.gpsMsg?`<div class="warn">${ic("gps")}<span>${esc(st.gpsMsg)}</span></div>`:""}${st.gps?gpsInfo():""}</div>${foot()}`;
   $("mk").onclick=()=>{ setMarking(true); }; $("gpsb").onclick=startGPS;
   const c=$("mclr"); if(c) c.onclick=()=>{ st.me=null; saveMe(); refresh(); };
   const cal=$("cal"); if(cal) cal.onclick=calibrate;
 }
 function gpsInfo(){
-  return `<h3>GPS · precisão ±${Math.round(st.gps.acc)} m</h3>${BORDER.map(k=>{ const B=BUILD[k], d=MM.hav(st.gps.lat,st.gps.lng,B.lat,B.lng); return `<div class="item" style="cursor:default"><span class="ico" style="background:#e8f3f4">🏢</span><div class="mid"><div class="n">${B.name}</div><div class="l">${d>1000?(d/1000).toFixed(1)+" km":Math.round(d)+" m"} ${B.cal?"(calibrado)":"(coordenada aproximada)"}</div></div><a class="dist" href="${gmaps(B.name+", "+B.addr)}" target="_blank" rel="noopener">Rota ↗</a></div>`; }).join("")}
-    <div class="btns"><button class="btn sm" id="cal">🎯 Estou na entrada do ${BUILD[G[st.g].b].short}</button></div>
+  return `<h3>GPS · precisão ±${Math.round(st.gps.acc)} m</h3>${BORDER.map(k=>{ const B=BUILD[k], d=MM.hav(st.gps.lat,st.gps.lng,B.lat,B.lng); return `<div class="gpsrow"><div class="mid"><div class="n">${B.name}</div><div class="l">${d>1000?(d/1000).toFixed(1)+" km":Math.round(d)+" m"} ${B.cal?"(calibrado)":"(coordenada aproximada)"}</div></div>${B.addr?`<a class="btn sm" href="${gmaps(B.name+", "+B.addr)}" target="_blank" rel="noopener">Rota ${ic("ext")}</a>`:""}</div>`; }).join("")}
+    <div class="btns"><button class="btn sm" id="cal">${ic("pin")}Estou na entrada do ${BUILD[G[st.g].b].short}</button></div>
     <div class="note">“Estou na entrada” grava o GPS atual como a posição do prédio aberto no mapa, só neste aparelho. O administrador pode gravar para todos no painel.</div>`;
 }
 function renderSheet(){
@@ -670,16 +763,16 @@ function startGPS(silent){
   if (!silent){ st.view="me"; if(st.sheet==="peek") setSheet("mid"); }
   if (!("geolocation" in navigator)){ st.gpsMsg="Este navegador não tem GPS."; return silent ? null : refresh(); }
   if (st.watch) { if(!silent) renderSheet(); return; }
-  st.gpsMsg="Procurando sua localização…"; if(!silent) refresh(); else toast("📍 Procurando em qual prédio você está…",2500);
+  st.gpsMsg="Procurando sua localização…"; if(!silent) refresh(); else toast("Procurando em qual prédio você está…",2500);
   try{ st.watch=navigator.geolocation.watchPosition(p=>{
     st.gps={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};
     let best=null; for(const k of BORDER){ const d=MM.hav(st.gps.lat,st.gps.lng,BUILD[k].lat,BUILD[k].lng); if(!best||d<best.d) best={k,d}; }
     st.gpsB=best; const inside=best.d<120+Math.min(st.gps.acc,80);
     $("gps").classList.add("on");
-    st.gpsMsg=inside?`📍 Você está no ${BUILD[best.k].name} (±${Math.round(st.gps.acc)} m).`:`Você está a ${best.d>1000?(best.d/1000).toFixed(1)+" km":Math.round(best.d)+" m"} do ${BUILD[best.k].name}.`;
+    st.gpsMsg=inside?`Você está no ${BUILD[best.k].name} (±${Math.round(st.gps.acc)} m).`:`Você está a ${best.d>1000?(best.d/1000).toFixed(1)+" km":Math.round(best.d)+" m"} do ${BUILD[best.k].name}.`;
     if (inside && !st.auto){ st.auto=true; const k=G[best.k+"|T"]?best.k+"|T":Object.keys(G).find(x=>x.startsWith(best.k)); if(k && G[st.g].b!==best.k) showGroup(k,true);
       if(!st.me && k){ const gg=G[k]; st.me={g:k,x:gg.entry.x,y:gg.entry.y,how:"entrada"}; refresh(); initialView(); }
-      toast("📍 Você está no "+BUILD[best.k].name,3500); }
+      toast("Você está no "+BUILD[best.k].name,3500); }
     if (st.view==="me") renderSheet();
   }, err=>{ st.watch=null; st.gpsMsg=err.code===1?"A permissão de localização foi negada ou está bloqueada nesta janela. No site publicado (HTTPS), permita o acesso ao local.":"Não foi possível obter o GPS agora."; $("gps").classList.remove("on"); if(st.view==="me") renderSheet(); }, {enableHighAccuracy:true,maximumAge:5000,timeout:20000}); }
   catch(e){ st.gpsMsg="GPS indisponível nesta janela."; refresh(); }
@@ -694,7 +787,7 @@ function calibrate(){
 /* ---------- tema claro / escuro ---------- */
 function applyTheme(t,redraw){
   document.documentElement.dataset.theme=t; MM.dark=(t==="dark"); lsSet("mm_theme",t);
-  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content=t==="dark"?"#16163f":"#2b2860";
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content="#16163f";
   if(redraw && G[st.g]) draw();
 }
 MM.dark = document.documentElement.dataset.theme==="dark";

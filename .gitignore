@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 lojas.json
+.impeccable/review/
+.impeccable/questions/
+.impeccable/decisao-direcao.json

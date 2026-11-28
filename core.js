@@ -34,6 +34,9 @@ MM.ICON = {
 /* marcos de referência (banheiro, escada, elevador…): ficam em layout['marcos'] = { "<piso>": [{id,t,x,y}] } */
 MM.MT = { wc: ["🚻", "Banheiro"], escada: ["🪜", "Escada rolante"], elevador: ["🛗", "Elevador"], entrada: ["🚪", "Entrada"], info: ["ℹ️", "Informações"], praca: ["🍴", "Alimentação"], caixa: ["🏧", "Caixa eletrônico"], estac: ["🅿️", "Estacionamento"] };
 MM.MARCOS = {};
+/* ícones desenhados dos marcos (mesmo traço dos ícones do app) */
+MM.MTI = { wc: "M7 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM17 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM5.5 21v-6H4l1.5-7h3L10 15H8.5v6M15 21V8h4v7h-1v6M12 3v18", escada: "M3 20h4v-4h4v-4h4V8h4V4", elevador: "M6 3h12v18H6zM9.5 9.5L12 7l2.5 2.5M9.5 14.5L12 17l2.5-2.5", entrada: "M14 4h5v16h-5M10 8l4 4-4 4M14 12H3", info: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5h.01", praca: "M7 3v8M5 3v5a2 2 0 004 0V3M7 11v10M17 3c-2 2-2.5 5-2.5 8h2.5v10", caixa: "M3 7h18v10H3zM12 14.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM6.5 10v4M17.5 10v4", estac: "M5 3h14v18H5zM10 17V7h3a3 3 0 010 6h-3" };
+MM.mtSvg = (t, x, y, sz, col) => `<g transform="translate(${r1(x - sz / 2)} ${r1(y - sz / 2)}) scale(${Math.round(sz / 24 * 100) / 100})"><path d="${MM.MTI[t] || MM.MTI.info}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
 MM.iconOf = c => MM.ICON[c] || "🛍️";
 MM.SVGI = {"Feminino": "M9.5 3l-1.5 5 2.5 2L7 21h10l-3.5-11L16 8l-1.5-5M9.5 3c.8 1.2 4.2 1.2 5 0", "Masculino": "M8 3L3 6l2 4 3-1v12h8V9l3 1 2-4-5-3c-.6 1.6-1.8 2.4-4 2.4S8.6 4.6 8 3z", "Jeans": "M7 3h10l1 18h-4.5L12 11l-1.5 10H6L7 3zM7 7h10", "Infantil": "M12 5.2a5 5 0 100 10 5 5 0 000-10zM7.6 5.2a1.9 1.9 0 100-3.8 1.9 1.9 0 000 3.8zM16.4 5.2a1.9 1.9 0 100-3.8 1.9 1.9 0 000 3.8zM7 21c0-3 2-5 5-5s5 2 5 5M12 12.2v.01", "Moda Praia": "M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2", "Moda Fitness": "M6 7v10M3.5 9v6M18 7v10M20.5 9v6M6 12h12", "Moda Íntima": "M12 20s-7-4.4-7-10a4 4 0 017-2.4A4 4 0 0119 10c0 5.6-7 10-7 10z", "Plus Size": "M12 3a9 9 0 100 18 9 9 0 000-18zM12 8v8M8 12h8", "Moda Cristã": "M12 3v18M7 8h10", "Social": "M10 3h4l-.8 3.2L15.5 18 12 21l-3.5-3 2.3-11.8L10 3z", "Modinha": "M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z", "Moda Balada": "M5 4h14l-7 8-7-8zM12 12v8M8 20h8", "Acessórios": "M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 016 0v2", "Calçados": "M3 17v-3c2 0 3-1 4-3l2-4 3 3c1 1 3 1.5 6 2.5 2 .6 3 1.5 3 3V17H3zM3 20h18", "Cosméticos": "M9 21v-7h6v7zM10 14V9h4v5M10.5 9l1-5 2.5 2-.5 3", "Alimentação": "M7 3v7a2 2 0 004 0V3M9 3v18M17 3c-2 1-3 4-3 7h3v11", "Serviços": "M6 17v-6a6 6 0 1112 0v6l2 2H4zM10 21h4", "Outlets": "M3 12V4h8l10 10-8 8L3 12zM7.5 7.5v.01", "Entretenimento": "M3 8h18v12H3zM3 8l3-4h4L7 8M10 8l3-4h4l-3 4", "Estética": "M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z", "_vaga": "M8 11a4 4 0 100 8 4 4 0 000-8zM11 12l8-8M15 8l2 2M17 6l2 2", "_def": "M6 7h12l1 13H5L6 7zM9 10V6.5a3 3 0 016 0V10"};
 MM.icoHTML = (k, col) => { const c = col || (k === "_vaga" ? "#c98a00" : MM.SEGCOLOR[k] || "#7d8790"); return `<svg class="gi" viewBox="0 0 24 24" style="color:${c}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${MM.SVGI[k] || MM.SVGI._def}"/></svg>`; };
@@ -455,13 +458,13 @@ MM.leg = function (G, from, s, label) {
   const fg = from && G[from.g];
   if (!fg) {
     steps.push(`Vá até o <b>${B.name}</b>${B.addr ? ` (${esc(B.addr)})` : ""}.`); floorMove("T"); walkIn(g.entry, "Da entrada,");
-    warn = "Marque sua posição (📍, QR Code do corredor ou “Estou nesta loja”) para a rota sair de onde você está.";
+    warn = "Marque sua posição (botão “Marcar onde estou”, QR Code do corredor ou “Estou nesta loja”) para a rota sair de onde você está.";
   } else if (fg.b !== s.b) {
     steps.push(`Saia do <b>${MM.BUILD[fg.b].name}</b> e vá ao <b>${B.name}</b> — os prédios do complexo ficam lado a lado.`);
     exitTo(fg); m += MM.PEN.building; floorMove("T"); if (s.f !== "T") m += MM.PEN.floor; walkIn(g.entry, "Da entrada,");
   } else if (from.g !== s.g) {
     const ex = MM.vert(fg, from), ar = MM.arrival(g, ex), nm = ex.t ? MM.VN[ex.t] : null;
-    steps.push(nm ? `Vá até ${nm.a} mais perto de você (marcado no mapa com ${MM.MT[ex.t][0]}).` : "Vá até a escada/elevador mais próximo.");
+    steps.push(nm ? `Vá até ${nm.a} mais perto de você (marcado no mapa).` : "Vá até a escada/elevador mais próximo.");
     exitTo(fg, ex); m += MM.PEN.floor; floorMove(fg.f, nm && nm.a); walkIn(ar, ex.t ? "Saindo " + nm.d + "," : "Saindo da escada,");
     const up = MM.FLEVEL[s.f] > MM.FLEVEL[fg.f], fl = MM.FLOORS[s.f].split(" ·")[0];
     vert.push({ g: fg.key, x: ex.x, y: ex.y, text: (up ? "↑ Suba" : "↓ Desça") + " para o " + fl }, { g: g.key, x: ar.x, y: ar.y, text: "Você chega aqui" });
@@ -577,6 +580,21 @@ function routeSvg(paths) {
   });
   return h;
 }
+/* legenda de catálogo: linha fina da loja escolhida até o rótulo REF + nome, como a legenda de uma peça no lookbook */
+MM.corAbbr = c => { c = String(c || ""); const r = /^Rua\s*0?(\d+)/i.exec(c); if (r) return "R" + r[1].padStart(2, "0");
+  const w = c.split(/\s+/).filter(x => x && !/^(da|do|dos|das|de|e)$/i.test(x));
+  return w.length > 1 ? w.map(x => x[0]).join("").toUpperCase().slice(0, 3) : c.toUpperCase().slice(0, 4); };
+MM.refOf = s => { const n = String(s.num || "").split(/[\/,;]/)[0].trim(); return MM.corAbbr(s.cor) + (n ? " " + n : ""); };
+MM.legenda = function (g, s) {
+  if (!s) return "";
+  const b = MM.bounds(g), nm = s.n.length > 26 ? s.n.slice(0, 25) + "…" : s.n, rf = MM.refOf(s);
+  const W = Math.max(nm.length * 8.6, rf.length * 8) + 8, left = s.cx > b.x + b.w * 0.62, up = s.cy - b.y > b.h * 0.25, dx = left ? -1 : 1;
+  const ex = dx * 30, ey = up ? -40 : 40, x2 = ex + dx * W, tx = (left ? x2 : ex) + 2;
+  /* desenhada em px de tela: o grupo interno é escalado por --lgs (1 / pixels por unidade), então a legenda não encolhe com o zoom */
+  return `<g class="legenda" aria-hidden="true" transform="translate(${r1(s.cx)} ${r1(s.cy)})"><g class="lgs"><path class="ln" d="M0 0L${ex} ${ey}H${r1(x2)}"/><circle class="pt" r="4.5"/>` +
+    `<text class="rf" x="${r1(tx)}" y="${up ? ey - 24 : ey + 17}" font-size="13">${esc(rf)}</text>` +
+    `<text class="nm" x="${r1(tx)}" y="${up ? ey - 6 : ey + 36}" font-size="17">${esc(nm)}</text></g></g>`;
+};
 MM.draw = function (g, o) {
   o = o || {}; let h = "";
   const paths = o.paths || (o.path ? [o.path] : []);
@@ -617,11 +635,13 @@ MM.draw = function (g, o) {
     else if (k > 0.45) {
       h += `<g transform="rotate(${r1(-s.ang)})"><g class="zi">${MM.icoSvg(s.ik, 0, -10.5 * k, 11 * k, s.vaga ? "#c98a00" : col)}</g>` +
         `<text class="zl" y="${ls.length > 1 ? r1(1.5 * k) : r1(3.5 * k)}" font-size="${r1(6.2 * k)}" font-weight="700" text-anchor="middle" fill="var(--ink,#2a2420)">${ls.map((t, i) => `<tspan x="0" dy="${i ? r1(7 * k) : 0}">${esc(t)}</tspan>`).join("")}</text>` +
-        `<text class="zn" y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="var(--mut,#8a7d72)">${s.dest ? "★ " : ""}${esc(s.num.slice(0, 12))}</text></g>`;
+        `<text class="zn" y="${r1(15 * k)}" font-size="${r1(5.4 * k)}" text-anchor="middle" fill="var(--mut,#8a7d72)">${esc(s.num.slice(0, 12))}</text></g>`;
     } else if (s.bw >= 9) h += `<g class="zi" transform="rotate(${r1(-s.ang)})">${MM.icoSvg(s.ik, 0, 0, 9, s.vaga ? "#c98a00" : col)}</g>`;
     { const col2 = s.vaga ? "#c98a00" : col, badge = s.dest ? "★" : s.vaga ? "🔑" : s.promo ? "%" : "", fl = "filter:drop-shadow(0 2px 3px rgba(0,0,0,.36))";
       const label = s.n + (s.num ? " · " + s.num : ""), txt = label.length > 26 ? label.slice(0, 25) + "…" : label, w = Math.round(txt.length * 5.4 + 38), hx = -w / 2;
-      const bd = (x, y) => badge ? `<circle cx="${x}" cy="${y}" r="6" fill="#fff" stroke="${col2}" stroke-width="1.3"/><text x="${x}" y="${y + 2.8}" font-size="${badge === "🔑" ? 7 : 8.5}" font-weight="900" text-anchor="middle" fill="${col2}">${badge}</text>` : "";
+      /* selo desenhado: destaque (estrela), vago (chave), promoção (etiqueta) */
+      const BDG = { "★": "M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9z", "🔑": "M15 13a4 4 0 100-8 4 4 0 000 8zM12.2 11.8L4 20M7 17l2.5 2.5", "%": "M3 12V4h8l10 10-8 8zM7.5 8.5h.01" };
+      const bd = (x, y) => badge ? `<circle cx="${x}" cy="${y}" r="6" fill="#fff" stroke="${col2}" stroke-width="1.3"/><g transform="translate(${r1(x - 4)} ${r1(y - 4)}) scale(.333)"><path d="${BDG[badge]}" fill="${badge === "★" ? col2 : "none"}" stroke="${col2}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>` : "";
       h += `<g class="mk${sel ? " sel" : ""}" data-s="${s.id}" transform="rotate(${r1(-s.ang)})">${sel ? `<circle class="pulse" r="10" fill="${col2}" pointer-events="none"/>` : ""}<g class="pin">` +
         `<g class="cm"><circle r="11" fill="${col2}" stroke="#fff" stroke-width="2" style="${fl}"/>${MM.icoSvg(s.ik, 0, 0, 12.5, "#fff")}${bd(8.5, -8.5)}</g>` +
         `<g class="pl"><rect x="${hx}" y="-12.5" width="${w}" height="25" rx="12.5" fill="var(--glass)" stroke="${col2}" stroke-width="1.6" style="${fl}"/><circle cx="${hx + 12.5}" r="10" fill="${col2}" stroke="#fff" stroke-width="1.8"/>${MM.icoSvg(s.ik, hx + 12.5, 0, 11.5, "#fff")}<text x="${hx + 27}" y="3.7" font-size="10.5" font-weight="800" fill="var(--ink)">${esc(txt)}</text>${bd(hx + w - 4, -10)}</g>` +
@@ -645,8 +665,9 @@ MM.draw = function (g, o) {
   if (paths.length && (!o.stops || o.fac)) { const l = paths[paths.length - 1], e = l[l.length - 1]; if (e) h += `<circle cx="${r1(e.x)}" cy="${r1(e.y)}" r="6" fill="var(--acc)" stroke="#fff" stroke-width="2" pointer-events="none"/>`; }
   if (o.stops) for (const s of g.stores) { const n = o.stops[s.id]; if (n) h += `<g transform="translate(${r1(s.door.x)} ${r1(s.door.y)})" pointer-events="none"><g class="pin"><path d="M0 0C-3-8-11-12-11-20a11 11 0 0122 0C11-12 3-8 0 0z" fill="var(--lst)" stroke="#fff" stroke-width="2.4"/><text y="-16.5" font-size="11" font-weight="900" fill="#fff" text-anchor="middle">${n}</text></g></g>`; }
   if (o.me) h += `<g transform="translate(${o.me.x} ${o.me.y})" pointer-events="none"><g class="pin"><circle class="pulse" r="8" fill="var(--me)"/><circle r="9" fill="var(--me)" stroke="#fff" stroke-width="3"/><circle r="3" fill="#fff"/></g></g>`;
-  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (t) h += `<g ${o.edit ? `data-h="M:${m.id}|m" style="cursor:move"` : 'pointer-events="none"'}><circle cx="${r1(m.x)}" cy="${r1(m.y)}" r="${o.edit ? 13 : 9.5}" fill="var(--panel,#fff)" stroke="${o.selSeg === "M:" + m.id ? "#e65100" : "var(--acc2,#2b2860)"}" stroke-width="${o.selSeg === "M:" + m.id ? 3.2 : 1.8}"/><text x="${r1(m.x)}" y="${r1(m.y + 4)}" font-size="11" text-anchor="middle">${t[0]}</text></g>`; }
+  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (t) h += `<g ${o.edit ? `data-h="M:${m.id}|m" style="cursor:move"` : 'pointer-events="none"'}><circle cx="${r1(m.x)}" cy="${r1(m.y)}" r="${o.edit ? 13 : 9.5}" fill="var(--panel,#fff)" stroke="${o.selSeg === "M:" + m.id ? "#e65100" : "var(--acc2,#2b2860)"}" stroke-width="${o.selSeg === "M:" + m.id ? 3.2 : 1.8}"/>${MM.mtSvg(m.t, m.x, m.y, 12, "var(--acc2,#2b2860)")}</g>`; }
   if (o.qr) for (const p of o.qr) h += `<g pointer-events="none"><rect x="${p.x - 5}" y="${p.y - 5}" width="10" height="10" rx="2" fill="#111"/><rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="#fff"/></g>`;
+  if (!o.edit && o.sel != null) h += MM.legenda(g, g.stores.find(x => x.id === o.sel));
   if (o.edit && o.selSeg && o.selSeg.startsWith("S:")) { const sh = (g.shapes || []).find(x => "S:" + x.id === o.selSeg);
     if (sh) sh.pts.forEach(([x, y], i) => { const [x2, y2] = sh.pts[(i + 1) % sh.pts.length];
       h += `<circle class="hd hm" data-h="S:${sh.id}|a${i}" cx="${r1((x + x2) / 2)}" cy="${r1((y + y2) / 2)}" r="5" fill="#fff" stroke="#e65100" stroke-width="2" style="cursor:copy"/>`;
@@ -743,7 +764,7 @@ MM.draw3d = function (g, o) {
     }
     h += `</g>`;
   }
-  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (!t) continue; const p = P(m.x, m.y, 3); h += `<g pointer-events="none"><circle cx="${r1(p.x)}" cy="${r1(p.y)}" r="9.5" fill="${D ? "#232250" : "#fff"}" stroke="${D ? "#8f89ff" : "#2b2860"}" stroke-width="1.8"/><text x="${r1(p.x)}" y="${r1(p.y + 4)}" font-size="11" text-anchor="middle">${t[0]}</text></g>`; }
+  for (const m of (MM.MARCOS[g.key] || [])) { const t = MM.MT[m.t]; if (!t) continue; const p = P(m.x, m.y, 3); h += `<g pointer-events="none"><circle cx="${r1(p.x)}" cy="${r1(p.y)}" r="9.5" fill="${D ? "#232250" : "#fff"}" stroke="${D ? "#8f89ff" : "#2b2860"}" stroke-width="1.8"/>${MM.mtSvg(m.t, p.x, p.y, 12, D ? "#c9c6ff" : "#2b2860")}</g>`; }
   const lift = paths.map(pa => (pa || []).map(p => P(p.x, p.y, 1.5)));
   lift.forEach(pa => { if (pa.length < 2) return; const pts = pa.map(pt).join(" "); h += `<polyline points="${pts}" fill="none" stroke="${D ? "#14132e" : "#fff"}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/><polyline class="route" points="${pts}" fill="none" stroke="var(--me)" stroke-width="4" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`; });
   const pin = (p, fill, label) => `<g pointer-events="none"><line x1="${r1(p.x)}" y1="${r1(p.y)}" x2="${r1(p.x)}" y2="${r1(p.y - 15)}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/><circle cx="${r1(p.x)}" cy="${r1(p.y - 20)}" r="8.5" fill="${fill}" stroke="#fff" stroke-width="2.2"/>${label != null ? `<text x="${r1(p.x)}" y="${r1(p.y - 16.8)}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${label}</text>` : ""}</g>`;

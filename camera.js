@@ -207,7 +207,7 @@ async function scanLoop() {
       const r = await det.detect(v); if (!r.length) return;
       const m = /#(qr-[a-z0-9-]+)/.exec(r[0].rawValue || ""); if (!m || m[1] === S.lastQR) return;
       const p = S.cb.qr && S.cb.qr(m[1], S.g); if (!p) return;
-      S.lastQR = m[1]; S.done = false; plan(p); S.cb.move && S.cb.move(p, S.g.key); note("📍 Posição atualizada pelo QR Code do corredor.", 3000); paint();
+      S.lastQR = m[1]; S.done = false; plan(p); S.cb.move && S.cb.move(p, S.g.key); note("Posição atualizada pelo QR Code do corredor.", 3000); paint();
       try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
     } catch (e) {}
   }, 700);
